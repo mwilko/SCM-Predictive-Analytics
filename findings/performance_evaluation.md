@@ -30,10 +30,10 @@ Random Forest - CV & Outlier removal & Param grid (Doesnt look correct on plot)
 
 #### Reducing test samples to train model based on each unique customer (to try and get better performance metrics)
 
-_including CV & param grid as previous_
+_including CV & param grid as previous. Target:OrderQuantity, Independant: ProductNumber_
 
 Random Forest (terrible performance)
-(independants added: order_year, order_month, order_week, order_day)
+(independants added: **order_year, order_month, order_week, order_day**)
 | Evaluation Metric | Model |
 | --- | --- |
 | MAE | 217596.9560 |
@@ -50,9 +50,31 @@ Random Forest (improved from previous)
 | RMSE | 280075.1973 |
 | R2 | -0.0853 |
 
+_Score was poor due to normalizing data and then training, if normalizing first. No data leakage_
+
+Random Forest
+(independants added: order_month, order_week, PhysicalInv, **order_weekday, is_weekend,inventory_ratio, is_backordered, Customer_Num**)
+| Evaluation Metric | Model |
+| --- | --- |
+| MAE | 83322.1957 |
+| MSE | 35148162591.4023 |
+| RMSE | 187478.4323 |
+| R2 | 0.5413 |
+
+Random Forest
+(independants added: order_month) - better performance when removed the additional independants
+| Evaluation Metric | Model |
+| --- | --- |
+| MAE | 84654.0300 |
+| MSE | 34939603632.0258 |
+| RMSE | 186921.3836 |
+| R2 | 0.5440 |
+
+---
+
 #### Notes
 
 Implement feature engineering to see if perfromance could be improved
-Maybe change standard scaler? could be effecting weighting?
+Maybe change standard scaler? could be effecting weighting? (✅)
 
 Seperate products by customer (may help with regression?) (✅)
