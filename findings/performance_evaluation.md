@@ -20,14 +20,6 @@ Random Forest with CV & Outliter removal
 | RMSE | 204605.8573 |
 | R² | 0.1196 |
 
-Random Forest with CV & Param grid (With outliers)
-| Evaluation Metric | Score |  
-| --- | --- |
-| MAE | 81106.3853 |
-| MSE | 29933938412.4621 |
-| RMSE | 173014.2723 |
-| R² | 0.2059 |
-
 Random Forest - CV & Outlier removal & Param grid (Doesnt look correct on plot)
 | Evaluation Metric | Score |
 | --- | --- |
@@ -35,6 +27,14 @@ Random Forest - CV & Outlier removal & Param grid (Doesnt look correct on plot)
 | MSE | 758.3109 |
 | RMSE | 27.5374 |
 | R² | -0.1655 |
+
+Random Forest with CV & Param grid (With outliers)
+| Evaluation Metric | Score |  
+| --- | --- |
+| MAE | 81106.3853 |
+| MSE | 29933938412.4621 |
+| RMSE | 173014.2723 |
+| R² | 0.2059 |
 
 ![Random Forest CV and Param grid final (minimal features)](rf_cv.png)
 
@@ -92,7 +92,8 @@ Random Forest
 | MSE | 19000357912.5767 |
 | RMSE | 137841.7858 |
 | R² | 0.7490 |
-\_Adding past sales quantities and moving avg last 3 months raise score\*
+
+_Adding past sales quantities and moving avg last 3 months raise score_
 
 ![Random Forest (R²=75%) - Predicted vs Actual values: Bar and Residual plots ](rf_r2_72.png)
 
