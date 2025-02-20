@@ -1,4 +1,4 @@
-# Stock Forecasting
+# Demand/Stock Forecasting
 
 ## Short update:
 
