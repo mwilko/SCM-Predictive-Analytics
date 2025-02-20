@@ -24,3 +24,12 @@ This dash is a mock up and will hopefully be transfered into Power BI. This appl
 The line chart demonstates how there are some orders which are really high than usual which is making the yearly customer quantity charts go off-balance.
 
 ![RF - Coefficient of Determination (90%) low side of errors](../images/custom_fre/fre_overall_perform.png)
+
+#### Each Order Quantity - Specifics
+
+Shows how the model acts with all orders. The model captures most of the orders but unexpected increases/decreases can be seen better here.
+![RF - Coefficient of Determination (90%) low side of errors](../images/custom_fre/fre_per_prod_perform.png)
+
+#### 2022 - 2025 Variance in Actual vs Predicted values
+
+![RF - Coefficient of Determination (90%) low side of errors](../images/custom_fre/fre_perform_22-25.png)
