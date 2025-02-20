@@ -1,0 +1,18 @@
+# Stock Forecasting
+
+## Short update:
+
+Finished looking for best models for the dataset. Random Forest came to be the best performing.
+
+Currently after hyperparm training and adding more independent variables i have raised my R2 - 90% and MAE are around 15k.
+
+Orders are labels for mainly retailers and supermarkets to make their products more enticing.
+
+- Orders can be 300k+.
+- Orders can be very versitile and not have any trends to suggest a increase/decrease in order quantity.
+
+### Current dashboard (Mock up)
+
+This dash is a mock up and will hopefully be transfered into Power BI. This application is being used because its one of the main BI tools used comercially.
+
+![RF - Coefficient of Determination (90%) low side of errors](./images/custom_fre/fre_dash_perform1.png)
