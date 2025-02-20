@@ -15,4 +15,4 @@ Orders are labels for mainly retailers and supermarkets to make their products m
 
 This dash is a mock up and will hopefully be transfered into Power BI. This application is being used because its one of the main BI tools used comercially.
 
-![RF - Coefficient of Determination (90%) low side of errors](./images/custom_fre/fre_dash_perform1.png)
+![RF - Coefficient of Determination (90%) low side of errors](../images/custom_fre/fre_dash_perform1.png)
