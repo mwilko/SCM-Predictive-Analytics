@@ -16,7 +16,7 @@ To understand the correlation between dataset features and OrderQuantity, this h
 
 ## Model Training / Independant variable choice-making
 
-Random Forest with CV & Outliter removal (Customer: ALB)
+Random Forest with CV & Outliter removal
 | Evaluation Metric | Training Performance |  
 | --- | --- |
 | MAE | 84860.9381 |
@@ -24,7 +24,7 @@ Random Forest with CV & Outliter removal (Customer: ALB)
 | RMSE | 204605.8573 |
 | R² | 0.1196 |
 
-Random Forest - CV & Outlier removal & Param grid (Customer: ALB) (Doesnt look correct on plot)
+Random Forest - CV & Outlier removal & Param grid(Doesnt look correct on plot)
 | Evaluation Metric | Training Performance |
 | --- | --- |
 | MAE | 7.2066 |
@@ -32,7 +32,7 @@ Random Forest - CV & Outlier removal & Param grid (Customer: ALB) (Doesnt look c
 | RMSE | 27.5374 |
 | R² | -0.1655 |
 
-Random Forest with CV & Param grid (Customer: ALB) (With outliers)
+Random Forest with CV & Param grid (With outliers)
 | Evaluation Metric | Training Performance |  
 | --- | --- |
 | MAE | 81106.3853 |
@@ -44,7 +44,7 @@ Random Forest with CV & Param grid (Customer: ALB) (With outliers)
 
 ### Adding more independant features due to poor performance
 
-#### Reducing test samples to train model based on each unique customer (to try and get better performance metrics)
+### Reducing test samples to train model based on each unique customer (to try and get better performance metrics)
 
 _including CV & param grid as previous. Target:OrderQuantity, Independant: ProductNumber_
 
