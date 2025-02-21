@@ -33,3 +33,25 @@ Shows how the model acts with all orders. The model captures most of the orders 
 #### 2022 - 2025 Variance in Actual vs Predicted values
 
 ![RF - Coefficient of Determination (90%) low side of errors](../images/custom_fre/fre_perform_22-25.png)
+
+## Independant Features
+
+ProductNumber - Code assigned to each label type.
+order_month – The month in which the order was placed.
+prev_month_sales – Sales from the previous month.
+prev_week_sales – Sales recorded in the previous week.
+moving_avg_3m – Three-month moving average of sales.
+moving_avg_12m – Twelve-month moving average of sales.
+moving_avg_18m – Eighteen-month moving average of sales.
+var_12m – Sales variance over the past twelve months.
+var_18m – Sales variance over the past eighteen months.
+log_var_12m – Log-transformed variance of sales over twelve months.
+log_var_18m – Log-transformed variance of sales over eighteen months.
+yoy_growth – Year-over-year percentage growth in sales.
+prev_2_month_sales – Sales from two months ago.
+prev_3_month_sales – Sales from three months ago.
+moving_avg_6m – Six-month moving average of sales.
+var_3m – Sales variance over the past three months.
+log_var_3m – Log-transformed variance of sales over three months.
+sales_2023 – Total sales recorded in 2023.
+sales_2024 – Total sales recorded in 2024.
