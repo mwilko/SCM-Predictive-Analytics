@@ -128,6 +128,17 @@ _Newly incorporated validation performance metrics to see how the model was perf
 ![Random Forest (R²=95%) - Predicted vs Actual values: Bar and Residual plots ](./images/rf_r2_95.png)
 ![Random Forest (R²=95%) - Scatter plot](./images/rf_r2_95_scatter.png)
 
+Random Forest (Customer: ALB) - Removing products with a z-score of 3
+Independant variables: same as previous
+| Evaluation Metric | Training Performance | Validation Performance |
+| ----------------- | -------------------- | ---------------------- |
+| MAE | 6582.9533 | 16750.7877 |
+| MSE | 1308380660.0621 | 7046627513.6220 |
+| RMSE | 36171.5449 | 83944.1929 |
+| R² | 0.9827 | 0.8882 |
+
+_Could be overfitting due to about 10% decrease in metric performance in validation?_
+
 #### Notes
 
 Implement feature engineering to see if perfromance could be improved (✅ / In progress)

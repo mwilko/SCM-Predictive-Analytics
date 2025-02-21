@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 # convert datasets to csv from txt
 # \t used as separator, because of raw data format and the headers as row 0
@@ -176,6 +177,9 @@ merged_data['log_var_3m'] = np.log1p(merged_data['var_3m'])
 merged_data['log_var_6m'] = np.log1p(merged_data['var_6m'])
 merged_data['log_var_12m'] = np.log1p(merged_data['var_12m'])
 merged_data['log_var_18m'] = np.log1p(merged_data['var_18m'])
+
+# calc z-score for (possibly) helping with outliers
+merged_data['z_score'] = np.abs(stats.zscore(merged_data['OrderQuantity']))
 
 # check and fill missing values
 for col in [

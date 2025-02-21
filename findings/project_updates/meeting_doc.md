@@ -54,9 +54,9 @@ var_12m – Sales variance over the past twelve months.
 
 var_18m – Sales variance over the past eighteen months.
 
-log_var_12m – Log-transformed variance of sales over twelve months.
+log_var_12m – Log-transformed variance of sales over twelve months. (Deals with outliers better)
 
-log_var_18m – Log-transformed variance of sales over eighteen months.
+log_var_18m – Log-transformed variance of sales over eighteen months. (Deals with outliers better)
 
 yoy_growth – Year-over-year percentage growth in sales.
 
