@@ -36,6 +36,21 @@ class ProductHandler:
             f"All custom codes for existing products: \n{products_by_customer}\n------------------------------------")
 
     @classmethod
+    def highest_customs(cls):
+        # extract the first three characters as 'CustomerCode'
+        product_sales['CustomerCode'] = product_sales['ProductNumber'].str[:3]
+
+        # group by 'CustomerCode' and sum 'OrderQuantity'
+        df_customers = product_sales.groupby('CustomerCode', as_index=False)[
+            'OrderQuantity'].sum()
+
+        # sort customers by total order quantity in descending order
+        df_customers = df_customers.sort_values(
+            by='OrderQuantity', ascending=False)
+
+        print(df_customers)
+
+    @classmethod
     def get_custom_code_data(cls, customer_code):
         # Retrieve the customer code list from the class-level dictionary
         return cls.custom_code_dict.get(customer_code, None)

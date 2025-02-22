@@ -73,3 +73,5 @@ log_var_3m – Log-transformed variance of sales over three months.
 sales_2023 – Total sales recorded in 2023.
 
 sales_2024 – Total sales recorded in 2024.
+
+z_score - Find outlier OrderQuantities between product orders (threshold = 3)

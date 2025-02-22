@@ -46,6 +46,25 @@ def evaluate_model(model, X, y):
     print(f"R-squared (R²): {r2:.4f}")
 
 
+def evaluate_model_nn(model, X, y):
+    """Evaluates a model using common regression metrics."""
+    # make predictions
+    y_pred = model.predict(X)
+
+    # compute metrics
+    mae = mean_absolute_error(y, y_pred)
+    mse = mean_squared_error(y, y_pred)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y, y_pred)
+
+    print(f"Mean Absolute Error (MAE): {mae:.4f}")
+    print(f"Mean Squared Error (MSE): {mse:.4f}")
+    print(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
+    print(f"R-squared (R²): {r2:.4f}")
+
+    return {"MAE": mae, "MSE": mse, "RMSE": rmse, "R²": r2}
+
+
 def param_grids(model_type):
     if model_type == RandomForestRegressor.__name__:  # Random Forest Regressor
         return {
