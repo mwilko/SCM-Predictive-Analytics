@@ -139,6 +139,15 @@ Independant variables: same as previous
 
 _Could be overfitting due to about 10% decrease in metric performance in validation?_
 
+## Voting: RF & NN (Keras Regressor)
+
+| Evaluation Metric | Training Performance | Validation Performance |
+| ----------------- | -------------------- | ---------------------- |
+| MAE               | 54699.2735           | 70365.5357             |
+| MSE               | 32888018227.5679     | 39115101904.6237       |
+| RMSE              | 181350.5396          | 197775.3825            |
+| R²                | 0.7241               | 0.5393                 |
+
 #### Notes
 
 Implement feature engineering to see if perfromance could be improved (✅ / In progress)
