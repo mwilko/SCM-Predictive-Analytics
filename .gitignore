@@ -2,4 +2,5 @@ processing.py
 datasets/stock_forecasting/raw/2022-2025/*.txt
 datasets/stock_forecasting/raw/2024-2025/*.txt
 datasets/stock_forecasting/final/*.csv
+tf_env
 
