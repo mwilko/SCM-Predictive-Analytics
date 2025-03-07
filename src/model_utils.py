@@ -24,29 +24,47 @@ import itertools
 import matplotlib.pyplot as plt
 
 
-def evaluate_model(model, X, y):
-    print('Evaluating model...')
+# def evaluate_model(model, X, y):
+#     print('Evaluating model...')
 
-    print(f"Model: {model.__class__.__name__}")
+#     print(f"Model: {model.__class__.__name__}")
 
-    # K-fold cross validation (k=5)
-    y_pred = cross_val_predict(model, X, y, cv=5)
+#     # K-fold cross validation (k=5)
+#     y_pred = cross_val_predict(model, X, y, cv=5)
 
-    # Mean Absolute Error (MAE)
-    mae = mean_absolute_error(y, y_pred)
-    print(f"Mean Absolute Error (MAE): {mae:.4f}")
+#     # Mean Absolute Error (MAE)
+#     mae = mean_absolute_error(y, y_pred)
+#     print(f"Mean Absolute Error (MAE): {mae:.4f}")
 
-    # Mean Squared Error (MSE)
-    mse = mean_squared_error(y, y_pred)
-    print(f"Mean Squared Error (MSE): {mse:.4f}")
+#     # Mean Squared Error (MSE)
+#     mse = mean_squared_error(y, y_pred)
+#     print(f"Mean Squared Error (MSE): {mse:.4f}")
 
-    # Root Mean Squared Error (RMSE)
-    rmse = np.sqrt(mse)
-    print(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
+#     # Root Mean Squared Error (RMSE)
+#     rmse = np.sqrt(mse)
+#     print(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
 
-    # R-squared (Coefficient of Determination)
-    r2 = r2_score(y, y_pred)
-    print(f"R-squared (R²): {r2:.4f}")
+#     # R-squared (Coefficient of Determination)
+#     r2 = r2_score(y, y_pred)
+#     print(f"R-squared (R²): {r2:.4f}")
+
+def evaluate_model(model, X, y_true, train_or_test_data):
+    """Simplified Eval model function"""
+    y_pred = model.predict(X)
+
+    metrics = {
+        'MAE': mean_absolute_error(y_true, y_pred),
+        'MSE': mean_squared_error(y_true, y_pred),
+        'RMSE': np.sqrt(mean_squared_error(y_true, y_pred)),
+        'R²': r2_score(y_true, y_pred)
+    }
+
+    print(f'\n{train_or_test_data} PERFORMANCE:')
+    for metric, value in metrics.items():
+        print(f"{metric}: {value:.4f}")
+    print('-' * 45)
+
+    return metrics
 
 
 def evaluate_model_nn(model, X, y):
