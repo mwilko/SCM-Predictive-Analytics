@@ -48,7 +48,7 @@ import matplotlib.pyplot as plt
 #     r2 = r2_score(y, y_pred)
 #     print(f"R-squared (R²): {r2:.4f}")
 
-def evaluate_model(model, X, y, y_scaler): # nn configuration
+def evaluate_model_advanced(model, X, y, y_scaler): # nn configuration
     """
     Simplified model eval function with description for future reference
 
@@ -77,7 +77,7 @@ def evaluate_model(model, X, y, y_scaler): # nn configuration
 
 
 
-def evaluate_model_nn(model, X, y):
+def evaluate_model(model, X, y):
     """Evaluates a model using common regression metrics."""
     # make predictions
     y_pred = model.predict(X)

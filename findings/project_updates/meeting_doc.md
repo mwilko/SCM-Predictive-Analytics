@@ -75,3 +75,18 @@ sales_2023 – Total sales recorded in 2023.
 sales_2024 – Total sales recorded in 2024.
 
 z_score - Find outlier OrderQuantities between product orders (threshold = 3)
+
+# Next meeting updates:
+
+## Model difference per-customer
+Models provide different performance depending on the customer. Some customers have better predictions with Random Forest, some with XGBoost and others with Neural Networks.
+
+Mostly, models provide similar evaluative scores for the customers. Since the SCM is a volitile enviroment, its hard to directly determine required order quantities due to uncertainty of multiple factors, such as seasonal demand, geopolitical issues and trends in purchasing.
+
+ALB - Neural Network
+
+FRE - XGBoost
+
+MON - XGBoost
+
+UND - XGBoost
