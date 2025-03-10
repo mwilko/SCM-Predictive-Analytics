@@ -1,22 +1,28 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
+import os
+
+# define dir for the datasets to be extracted
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+data_dir = os.path.join(base_dir, "datasets",
+                        "stock_forecasting", "raw", "2022-2025")
 
 # convert datasets to csv from txt
 # \t used as separator, because of raw data format and the headers as row 0
 products_s = pd.read_csv(
-    '../datasets/stock_forecasting/raw/2022-2025/[LT] Products [STOCK].txt', sep='\t', header=0)  # stock
+    os.path.join(data_dir, '[LT] Products [STOCK].txt'), sep='\t', header=0)  # stock
 tickets_c_i = pd.read_csv(
-    '../datasets/stock_forecasting/raw/2022-2025/[LT] Tickets [CUSTOM] [ITEMS].txt', sep='\t', header=0)  # customer order items
+    os.path.join(data_dir, '[LT] Tickets [CUSTOM] [ITEMS].txt'), sep='\t', header=0)  # customer order items
 # customer order main data
 tickets_c_m = pd.read_csv(
-    '../datasets/stock_forecasting/raw/2022-2025/[LT] Tickets [CUSTOM] [MAIN].txt', sep='\t', header=0)
+    os.path.join(data_dir, '[LT] Tickets [CUSTOM] [MAIN].txt'), sep='\t', header=0)
 # customer order main data
 sp_inv_adds = pd.read_csv(
-    '../datasets/stock_forecasting/raw/2022-2025/[LT] SP Inventory [ADDS].txt', sep='\t', header=0)
+    os.path.join(data_dir, '[LT] SP Inventory [ADDS].txt'), sep='\t', header=0)
 # customer order main data
 sp_inv_rel = pd.read_csv(
-    '../datasets/stock_forecasting/raw/2022-2025/[LT] SP Inventory [REL].txt', sep='\t', header=0)
+    os.path.join(data_dir, '[LT] SP Inventory [REL].txt'), sep='\t', header=0)
 
 # # display the first 5 rows of the datasets
 # print('-------------- Product [STOCK] ----------------')
@@ -256,9 +262,14 @@ merged_data['OrderDate'] = pd.to_datetime(merged_data['OrderDate'])
 sales_data = merged_data.set_index(['OrderDate', 'ProductNumber'])
 sales_data = sales_data['OrderQuantity']
 
+# define dir for the transformed datasets to be saved
+final_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+final_data_dir = os.path.join(base_dir, "datasets",
+                              "stock_forecasting", "final")
+
 # saves outputs of products_sales to '../datasets/stock_forecasting/final'
 product_sales.to_csv(
-    '../datasets/stock_forecasting/final/product_sales.csv', index=False)
+    os.path.join(final_data_dir, 'product_sales.csv'), index=False)
 
 # sales_data.head()
 
