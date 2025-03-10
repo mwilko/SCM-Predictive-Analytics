@@ -48,23 +48,33 @@ import matplotlib.pyplot as plt
 #     r2 = r2_score(y, y_pred)
 #     print(f"R-squared (R²): {r2:.4f}")
 
-def evaluate_model(model, X, y_true, train_or_test_data):
-    """Simplified Eval model function"""
-    y_pred = model.predict(X)
+def evaluate_model(model, X, y, y_scaler): # nn configuration
+    """
+    Simplified model eval function with description for future reference
 
-    metrics = {
-        'MAE': mean_absolute_error(y_true, y_pred),
-        'MSE': mean_squared_error(y_true, y_pred),
-        'RMSE': np.sqrt(mean_squared_error(y_true, y_pred)),
-        'R²': r2_score(y_true, y_pred)
+    Parameters:
+    - model: Trained scikit-learn pipeline
+    - X: Features (DataFrame)
+    - y: Target values (1D array)
+    - y_scaler: Fitted StandardScaler for inverse scaling the target variable
+    """
+    # Transform X using the preprocessing pipeline
+    X_transformed = model.named_steps['preprocessor'].transform(X)
+    
+    # Predict on transformed features
+    predictions = model.named_steps['mlp'].predict(X_transformed)
+    
+    # Reverse target scaling
+    y_actual = y_scaler.inverse_transform(y.reshape(-1, 1)).flatten()
+    y_pred = y_scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
+    
+    return {
+        'MAE': mean_absolute_error(y_actual, y_pred),
+        'MSE': mean_squared_error(y_actual, y_pred),
+        'RMSE': np.sqrt(mean_squared_error(y_actual, y_pred)),
+        'R²': r2_score(y_actual, y_pred)
     }
 
-    print(f'\n{train_or_test_data} PERFORMANCE:')
-    for metric, value in metrics.items():
-        print(f"{metric}: {value:.4f}")
-    print('-' * 45)
-
-    return metrics
 
 
 def evaluate_model_nn(model, X, y):
