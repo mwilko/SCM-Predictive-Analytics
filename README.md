@@ -13,4 +13,4 @@ SCM is a volitile and highly fluctuating industry, Catapult needs to have an acc
 
 Utilising historical data from product orders provided by Catapult with their datasets, ML can be incorporated to predict the future order quantities. 
 
-![FRE Customer predictions. (Cat's customer with the highest sold products)](/findings\images\custom_fre\neural_network\overall.png)
+![FRE Customer predictions. (Cat's customer with the highest sold products)](/findings\images\custom_fre\neural_network\time_series.png)
