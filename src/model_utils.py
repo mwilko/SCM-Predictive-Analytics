@@ -9,6 +9,13 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import LinearRegression
 
+# preprocessing imports
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.model_selection import GridSearchCV
+
 # nn imports
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -18,11 +25,15 @@ from scikeras.wrappers import KerasRegressor
 from tensorflow import keras
 from sklearn.base import BaseEstimator, RegressorMixin
 
+# new nn imports
+from sklearn.neural_network import MLPRegressor
+
+# xgboost imports
+from xgboost import XGBRegressor
 # sarimax (times series)
 import itertools
 
 import matplotlib.pyplot as plt
-
 
 # def evaluate_model(model, X, y):
 #     print('Evaluating model...')
@@ -103,7 +114,8 @@ def param_grids(model_type):
             'max_depth': [5, 10, 20, None],
             'min_samples_split': [2, 5, 10],
             'criterion': ['squared_error'],
-            'min_samples_leaf': [1, 2, 4]
+            'min_samples_leaf': [1, 2, 4],
+            'random_state': [42]
         }
     elif model_type == DecisionTreeRegressor.__name__:  # Decision Tree Regressor
         return {
@@ -119,7 +131,7 @@ def param_grids(model_type):
             'copy_X': [True, False],
             'positive': [True, False]
         }
-    # used keras regressor for NN model
+    # used keras regressor for NN model (old implementation)
     elif model_type == KerasRegressor.__name__:  # NN Model (best params found)
         return {
             'batch_size': [64],
@@ -130,16 +142,45 @@ def param_grids(model_type):
             'random_state': [42],
             'shuffle': [True]
         }
+    elif model_type == MLPRegressor.__name__:  # MLPRegressor (Neural Network)
+        return {
+            'hidden_layer_sizes': [(50,), (100,), (50, 50), (100, 50)],  # Number of neurons per layer
+            'activation': ['relu', 'tanh'],
+            'solver': ['adam', 'lbfgs', 'sgd'],
+            'alpha': [0.0001, 0.001, 0.01],  # L2 regularization (weight decay)
+            'learning_rate': ['constant', 'adaptive'],
+            'max_iter': [200, 500, 1000],
+            'early_stopping': [True],
+            'random_state': [42]
+        }
+    elif model_type == XGBRegressor.__name__:  # XGBoost Regressor
+        return {
+            'n_estimators': [100, 200, 500],
+            'learning_rate': [0.01, 0.1, 0.2],
+            'max_depth': [3, 5, 7],
+            'subsample': [0.7, 0.8, 1.0],
+            'colsample_bytree': [0.7, 0.8, 1.0],
+            'gamma': [0, 0.1, 0.2],  # Minimum loss reduction for further partitioning
+            'reg_alpha': [0, 0.01, 0.1],  # L1 regularization (feature selection)
+            'reg_lambda': [0.1, 1, 10],  # L2 regularization (prevents overfitting)
+            'random_state': [42]
+        }
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
 
 
 def find_best_hyperparameters(model, parameter_grid, X_train, y_train):
     model_type = model.__class__.__name__
-    from sklearn.model_selection import GridSearchCV
 
+    print(f'Model type: {model_type}')
     grid_search = GridSearchCV(
-        estimator=model, param_grid=parameter_grid, cv=5, n_jobs=-1, verbose=2)
+        estimator=model,
+        param_grid=parameter_grid, 
+        cv=5,
+        n_jobs=-1, 
+        verbose=2,
+        scoring='neg_mean_squared_error' # ensures function chooses metrics with the lowest MSE
+        )
     grid_search.fit(X_train, y_train)
 
     print(f'{model.__class__.__name__} Best Parameters: {grid_search.best_params_}')
