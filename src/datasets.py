@@ -6,7 +6,7 @@ import os
 # define dir for the datasets to be extracted
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 data_dir = os.path.join(base_dir, "datasets",
-                        "stock_forecasting", "raw", "2022-2025")
+                        "forecasting", "raw", "2022-2025")
 
 # convert datasets to csv from txt
 # \t used as separator, because of raw data format and the headers as row 0
@@ -265,7 +265,7 @@ sales_data = sales_data['OrderQuantity']
 # define dir for the transformed datasets to be saved
 final_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 final_data_dir = os.path.join(base_dir, "datasets",
-                              "stock_forecasting", "final")
+                              "forecasting", "final")
 
 # saves outputs of products_sales to '../datasets/stock_forecasting/final'
 product_sales.to_csv(
@@ -298,4 +298,4 @@ product_sales.to_csv(
 #     sp_inv_rel.columns, columns=['Column'])])
 
 # save the columns to a txt file
-# columns.to_csv('../datasets/stock_forecasting/2022-2025/columns.txt', index=False)
+# columns.to_csv('../datasets/forecasting/2022-2025/columns.txt', index=False)
