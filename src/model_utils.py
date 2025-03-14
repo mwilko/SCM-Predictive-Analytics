@@ -145,24 +145,25 @@ def param_grids(model_type):
     elif model_type == MLPRegressor.__name__:  # MLPRegressor (Neural Network)
         return {
             # Number of neurons per layer
-            'hidden_layer_sizes': [(50,), (100,), (50, 50)],
+            'hidden_layer_sizes': [256, 128, 64],
             'activation': ['relu'],
             'solver': ['adam'],
             'alpha': [0.0001, 0.001],  # L2 regularization (weight decay)
             'learning_rate': ['adaptive'],
-            'max_iter': [500],
+            'learning_rate_init': [0.005, 0.01],
+            'max_iter': [500, 1000, 2000],
             'early_stopping': [True],
             'random_state': [42]
         }
     elif model_type == XGBRegressor.__name__:  # XGBoost Regressor
         return {
-            'n_estimators': [200, 500],
+            'n_estimators': [100, 500],
             'learning_rate': [0.01, 0.1, 0.2],
-            'max_depth': [3, 5],
+            'max_depth': [3, 8],
             # Can add 0.7 for bigger datasets (removed due to training times)
-            'subsample': [0.8, 1.0],
+            'subsample': [0.6, 1.0],
             # Can add 0.7 for bigger datasets (removed due to training times)
-            'colsample_bytree': [0.8, 1.0],
+            'colsample_bytree': [0.6, 1.0],
             # Minimum loss reduction for further partitioning
             # 'gamma': [0, 0.1, 0.2], # Only include if seeing overfitting
             # L1 regularization (feature selection)
@@ -183,7 +184,7 @@ def find_best_hyperparameters(model, parameter_grid, X_train, y_train):
         estimator=model,
         param_grid=parameter_grid,
         cv=5,
-        n_jobs=-1,
+        n_jobs=-1, # Uses all CPU cores
         verbose=2,
         # ensures function chooses metrics with the lowest MSE
         scoring='neg_mean_squared_error'
