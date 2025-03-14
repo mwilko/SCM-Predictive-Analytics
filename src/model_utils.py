@@ -59,7 +59,8 @@ import matplotlib.pyplot as plt
 #     r2 = r2_score(y, y_pred)
 #     print(f"R-squared (R²): {r2:.4f}")
 
-def evaluate_model_advanced(model, X, y, y_scaler): # nn configuration
+
+def evaluate_model_advanced(model, X, y, y_scaler):  # nn configuration
     """
     Simplified model eval function with description for future reference
 
@@ -71,21 +72,20 @@ def evaluate_model_advanced(model, X, y, y_scaler): # nn configuration
     """
     # Transform X using the preprocessing pipeline
     X_transformed = model.named_steps['preprocessor'].transform(X)
-    
+
     # Predict on transformed features
     predictions = model.named_steps['mlp'].predict(X_transformed)
-    
+
     # Reverse target scaling
     y_actual = y_scaler.inverse_transform(y.reshape(-1, 1)).flatten()
     y_pred = y_scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
-    
+
     return {
         'MAE': mean_absolute_error(y_actual, y_pred),
         'MSE': mean_squared_error(y_actual, y_pred),
         'RMSE': np.sqrt(mean_squared_error(y_actual, y_pred)),
         'R²': r2_score(y_actual, y_pred)
     }
-
 
 
 def evaluate_model(model, X, y):
@@ -144,12 +144,13 @@ def param_grids(model_type):
         }
     elif model_type == MLPRegressor.__name__:  # MLPRegressor (Neural Network)
         return {
-            'hidden_layer_sizes': [(50,), (100,), (50, 50), (100, 50)],  # Number of neurons per layer
-            'activation': ['relu', 'tanh'],
-            'solver': ['adam', 'lbfgs', 'sgd'],
-            'alpha': [0.0001, 0.001, 0.01],  # L2 regularization (weight decay)
-            'learning_rate': ['constant', 'adaptive'],
-            'max_iter': [200, 500, 1000],
+            # Number of neurons per layer
+            'hidden_layer_sizes': [(50,), (100,), (50, 50)],
+            'activation': ['relu'],
+            'solver': ['adam'],
+            'alpha': [0.0001, 0.001],  # L2 regularization (weight decay)
+            'learning_rate': ['adaptive'],
+            'max_iter': [500],
             'early_stopping': [True],
             'random_state': [42]
         }
@@ -160,9 +161,12 @@ def param_grids(model_type):
             'max_depth': [3, 5, 7],
             'subsample': [0.7, 0.8, 1.0],
             'colsample_bytree': [0.7, 0.8, 1.0],
-            'gamma': [0, 0.1, 0.2],  # Minimum loss reduction for further partitioning
-            'reg_alpha': [0, 0.01, 0.1],  # L1 regularization (feature selection)
-            'reg_lambda': [0.1, 1, 10],  # L2 regularization (prevents overfitting)
+            # Minimum loss reduction for further partitioning
+            'gamma': [0, 0.1, 0.2],
+            # L1 regularization (feature selection)
+            'reg_alpha': [0, 0.01, 0.1],
+            # L2 regularization (prevents overfitting)
+            'reg_lambda': [0.1, 1, 10],
             'random_state': [42]
         }
     else:
@@ -175,12 +179,13 @@ def find_best_hyperparameters(model, parameter_grid, X_train, y_train):
     print(f'Model type: {model_type}')
     grid_search = GridSearchCV(
         estimator=model,
-        param_grid=parameter_grid, 
+        param_grid=parameter_grid,
         cv=5,
-        n_jobs=-1, 
+        n_jobs=-1,
         verbose=2,
-        scoring='neg_mean_squared_error' # ensures function chooses metrics with the lowest MSE
-        )
+        # ensures function chooses metrics with the lowest MSE
+        scoring='neg_mean_squared_error'
+    )
     grid_search.fit(X_train, y_train)
 
     print(f'{model.__class__.__name__} Best Parameters: {grid_search.best_params_}')
