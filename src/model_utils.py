@@ -156,17 +156,19 @@ def param_grids(model_type):
         }
     elif model_type == XGBRegressor.__name__:  # XGBoost Regressor
         return {
-            'n_estimators': [100, 200, 500],
+            'n_estimators': [200, 500],
             'learning_rate': [0.01, 0.1, 0.2],
-            'max_depth': [3, 5, 7],
-            'subsample': [0.7, 0.8, 1.0],
-            'colsample_bytree': [0.7, 0.8, 1.0],
+            'max_depth': [3, 5],
+            # Can add 0.7 for bigger datasets (removed due to training times)
+            'subsample': [0.8, 1.0],
+            # Can add 0.7 for bigger datasets (removed due to training times)
+            'colsample_bytree': [0.8, 1.0],
             # Minimum loss reduction for further partitioning
-            'gamma': [0, 0.1, 0.2],
+            # 'gamma': [0, 0.1, 0.2], # Only include if seeing overfitting
             # L1 regularization (feature selection)
-            'reg_alpha': [0, 0.01, 0.1],
+            'reg_alpha': [0.1],
             # L2 regularization (prevents overfitting)
-            'reg_lambda': [0.1, 1, 10],
+            'reg_lambda': [1],
             'random_state': [42]
         }
     else:
