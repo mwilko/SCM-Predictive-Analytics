@@ -15,7 +15,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.model_selection import GridSearchCV
-from tqdm import tqdm
 
 # nn imports
 import tensorflow as tf
@@ -174,38 +173,19 @@ def find_best_hyperparameters(model, parameter_grid, X_train, y_train):
     model_type = model.__class__.__name__
 
     print(f'Model type: {model_type}')
-    
-    # Use tqdm for progress tracking by setting the total number of iterations
-    total_combinations = 1
-    for param_list in parameter_grid.values():
-        total_combinations *= len(param_list)
-    
-    # Initialize a GridSearchCV instance, but use a custom loop for progress bar
     grid_search = GridSearchCV(
         estimator=model,
         param_grid=parameter_grid, 
         cv=5,
         n_jobs=-1, 
-        verbose=0,  # Disable verbose output to avoid cluttering the console
-        scoring='neg_mean_squared_error'  # Ensures the function chooses metrics with the lowest MSE
-    )
-    
-    # Initialize tqdm with the total number of combinations
-    with tqdm(total=total_combinations, desc="Grid Search Progress", unit="combination") as pbar:
-        
-        # Create a custom fit function to update tqdm after each fold in each parameter combination
-        def fit_with_progress(model, X, y):
-            # This is where the model is trained and evaluated across cross-validation folds
-            for _ in range(total_combinations):
-                grid_search.fit(X, y)
-                pbar.update(1)
-                
-        fit_with_progress(model, X_train, y_train)
-        
+        verbose=2,
+        scoring='neg_mean_squared_error' # ensures function chooses metrics with the lowest MSE
+        )
+    grid_search.fit(X_train, y_train)
+
     print(f'{model.__class__.__name__} Best Parameters: {grid_search.best_params_}')
 
     return grid_search.best_params_
-
 
 
 # evaluate SARIMAX model using grid search and cv
