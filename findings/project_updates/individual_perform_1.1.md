@@ -1,7 +1,8 @@
 # Predictive ability on customers can be dependant on selecting the correct model
 
 ## FRE Predictive ability:
- 
+
+### Individual model performance
 - RF
 
 | Evaluation Metric | Training Performance | Validation Performance |
@@ -28,3 +29,5 @@
 | MSE               | 92494728.0000     | 1203561088.0000       |
 | RMSE              | 9617.4179          | 34692.3780            |
 | R²                | 0.9947               | 0.9442                 |
+
+### Testing ensemble models
