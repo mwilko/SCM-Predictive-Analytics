@@ -43,7 +43,4 @@ Stacked Ensemble offered the best results out of all the methods and outperforme
 | RMSE              | 37549.1169          | 37549.1169            |
 | R²                | 0.9941               | 0.9400                 |
 
-Stacked shows better metrics and generalisation. XGB metrics indicate that the incorporating weighted stacking could be advantageous (bias to XGB predictions).
-
-##### Stacked Ensemble with Weighting
-
+Stacked shows better metrics and generalisation.
