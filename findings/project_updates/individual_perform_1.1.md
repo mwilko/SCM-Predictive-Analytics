@@ -2,7 +2,7 @@
 
 ## FRE Predictive ability:
 
-### Individual model performance
+### Base model evaluation metrics
 - RF
 
 | Evaluation Metric | Training Performance | Validation Performance |
@@ -21,7 +21,7 @@
 | RMSE              | 32857.5936          | 42773.9464            |
 | R²                | 0.9382               | 0.9151                 |
 
-- XGBoost
+- XGB
 
 | Evaluation Metric | Training Performance | Validation Performance |
 | ----------------- | -------------------- | ---------------------- |
@@ -31,5 +31,19 @@
 | R²                | 0.9967               | 0.9334                 |
 
 ### Testing ensemble models
+Four ensemble methods were tested. Voting Classifiers, Averaging Ensemble, Weighted Ensemble and Stacked Ensemble.
 
+Stacked Ensemble offered the best results out of all the methods and outperformed all base model evaluation metric scores.
+
+#### Stacked Ensemble (RF, MLP, XGB)
+| Evaluation Metric | Training Performance | Validation Performance |
+| ----------------- | -------------------- | ---------------------- |
+| MAE               | 6793.7099           | 14153.2140             |
+| MSE               | 103822127.4692     | 1292659795.3764       |
+| RMSE              | 37549.1169          | 37549.1169            |
+| R²                | 0.9941               | 0.9400                 |
+
+Stacked shows better metrics and generalisation. XGB metrics indicate that the incorporating weighted stacking could be advantageous (bias to XGB predictions).
+
+##### Stacked Ensemble with Weighting
 
