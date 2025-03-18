@@ -215,7 +215,7 @@ for col in [
 # aggregation
 product_sales = merged_data.groupby([  # group rows by:
     'ProductNumber',
-    'order_year', 'order_month', 'order_week', 'order_weekday', 'is_weekend',
+    'order_year', 'order_month', 'order_week', 'order_weekday', 'is_weekend', 'OrderDate',
     'Customer_Num'
 ]).agg({  # include these columns with respective data
     'OrderQuantity': 'sum',
