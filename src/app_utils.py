@@ -15,60 +15,86 @@ from xgboost import XGBRegressor
 from sklearn.linear_model import Ridge
 from sklearn.ensemble import StackingRegressor
 # Plotting
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.dates as mdates
+# Evaluation Metrics
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# Define the function to compute z-scores for each group
+def compute_group_zscore(group):
+    group['z_score'] = np.abs(stats.zscore(group['OrderQuantity']))
+    return group
+
+class Evaluation:
+    @classmethod
+    def metric_scores(cls, actual_data, predicted_data):
+        mae = mean_absolute_error(actual_data, predicted_data)
+        mse = mean_squared_error(actual_data, predicted_data)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(actual_data, predicted_data)
+
+        # Use Markdown formatting for line breaks
+        metrics = (
+            '##### -- Metric Scores Predicted against Actual data --  \n'
+            f'###### Mean Absolute Error (MAE): {mae:.4f}  \n'
+            f'###### Mean Square Error (MSE): {mse:.4f}  \n'
+            f'###### Root Mean Squared Error (RMSE): {rmse:.4f}  \n'
+            f'###### Coefficient of Determination (R²): {r2:.4f}  \n'
+            '---------------------'
+        )
+        return metrics
+
 
 class Transform:
-    @classmethod
-    def compute_zscore(cls, group, threshold=3):
-        # Only compute z-score if there are at least 2 data points in the group
-        if len(group) >= 2:
-            group['z_score'] = np.abs(stats.zscore(group['OrderQuantity']))
-        else:
-            group['z_score'] = 0  # or np.nan if preferred
-        return group
+    @staticmethod
+    def compute_zscore(df, threshold=3):
+        # Check if df is a DataFrame
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("Input must be a pandas DataFrame")
+        
+        # Group by ProductNumber and apply z-score calculation
+        df_grouped = df.groupby('ProductNumber').apply(compute_group_zscore)
+        
+        # Filter rows where z-score is above threshold
+        df_filtered = df_grouped[df_grouped['z_score'] <= threshold]
+        
+        return df_filtered
 
     @classmethod
-    def transform_data(cls, X_train, X_val, features):
+    def transform_data(cls, X_train, X_val, X):
+        # Handle infinities by replacing them with NaN
+        X_train.replace([np.inf, -np.inf], np.nan, inplace=True)
+        X_val.replace([np.inf, -np.inf], np.nan, inplace=True)
+
         # Define categorical and numeric features
-        categorical_features = ['ProductNumber']
-        numeric_features = [col for col in features if col not in categorical_features]
+        categorical_features = X_train.select_dtypes(include=['object']).columns.tolist()
+        numeric_features = [col for col in X_train.columns if col not in categorical_features]
 
-        # Preprocessing pipeline
-        categorical_transformer = Pipeline(steps=[
-            ('imputer', SimpleImputer(strategy='most_frequent')),
-            ('encoder', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
-        ])
-
+        # Define transformers
         numeric_transformer = Pipeline(steps=[
             ('imputer', SimpleImputer(strategy='mean')),
             ('scaler', StandardScaler())
         ])
 
+        categorical_transformer = Pipeline(steps=[
+            ('imputer', SimpleImputer(strategy='most_frequent')),
+            ('onehot', OneHotEncoder(handle_unknown='ignore'))
+        ])
+
+        # Combine transformers into a preprocessor
         preprocessor = ColumnTransformer(
             transformers=[
-                ('cat', categorical_transformer, categorical_features),
-                ('num', numeric_transformer, numeric_features)
+                ('num', numeric_transformer, numeric_features),
+                ('cat', categorical_transformer, categorical_features)
             ]
         )
 
-        # Fit and transform the training data (fit and transform used so the preprocessor learns the features)
+        # Fit and transform training data, transform validation data
         X_train_preprocessed = preprocessor.fit_transform(X_train)
-
-        # Transform the validation data
         X_val_preprocessed = preprocessor.transform(X_val)
 
-        # Extract feature names from the fitted pipeline
-        encoded_cat_features = preprocessor.named_transformers_['cat'].named_steps['encoder'].get_feature_names_out(categorical_features)
-
-        # Combine categorical and numeric feature names
-        all_feature_names = list(encoded_cat_features) + numeric_features
-
-        # # Convert preprocessed data back to DataFrame with correct feature names and index (Uncode if needed)
-        # X_train_preprocessed_df = pd.DataFrame(X_train_preprocessed, columns=all_feature_names, index=X_train.index)
-        # X_val_preprocessed_df = pd.DataFrame(X_val_preprocessed, columns=all_feature_names, index=X_val.index)
-
-        return X_train_preprocessed, X_val_preprocessed
+        return X_train_preprocessed, X_val_preprocessed 
 
 class Tuning:
     rf_tuned = RandomForestRegressor( # Tuned model hyperparams from rf ipynb
@@ -117,6 +143,9 @@ class Tuning:
         final_estimator=meta_model
     )
 
+import matplotlib.dates as mdates  # Import for date formatting
+import pandas as pd
+
 class Plots:
     @classmethod
     def overall(cls, df, y_data, x_data, predict_data, custom_ref):
@@ -124,18 +153,29 @@ class Plots:
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(18, 12)) 
         fig.subplots_adjust(hspace=0.5, wspace=0.4)
 
+        # Ensure 'OrderDate' is in datetime format
+        df['OrderDate'] = pd.to_datetime(df['OrderDate'])
+
         # Time Series Comparison
         sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=y_data, label='Actual', ax=axes[0, 0])
         sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=predict_data, label='Predicted', ax=axes[0, 0])
-        axes[0, 0].set_title(f'{custom_ref} Neural Network - Time Series', fontsize=16)
+        axes[0, 0].set_title(f'{custom_ref} - Time Series', fontsize=16)
         axes[0, 0].set_xlabel('Date', fontsize=14)  
         axes[0, 0].set_ylabel('Order Quantity', fontsize=14)
+
+        # Set major locator to every month
+        axes[0, 0].xaxis.set_major_locator(mdates.MonthLocator())  # Show one tick per month
+        # '%b' for abbreviated month names, '%y' for the last two digits of the year
+        axes[0, 0].xaxis.set_major_formatter(mdates.DateFormatter('%b %y'))  # Show Month Year (e.g., 'Jan 24')
+
+        # Format the x-axis labels and avoid overlap
+        plt.setp(axes[0, 0].get_xticklabels(), rotation=45, ha='right', fontsize=12)
 
         # Residual Plot
         residuals = y_data - predict_data
         sns.scatterplot(x=predict_data, y=residuals, alpha=0.6, ax=axes[0, 1])
         axes[0, 1].axhline(0, color='r', linestyle='--')
-        axes[0, 1].set_title(f'{custom_ref} Neural Network - Residuals', fontsize=16)  
+        axes[0, 1].set_title(f'{custom_ref} - Residuals', fontsize=16)  
         axes[0, 1].set_xlabel('Predicted Values', fontsize=14)  
         axes[0, 1].set_ylabel('Scaled Residuals', fontsize=14)
 
@@ -144,7 +184,7 @@ class Plots:
         max_val = max(y_data.max(), predict_data.max())
         sns.scatterplot(x=y_data, y=predict_data, alpha=0.6, ax=axes[1, 0], label='Predicted')
         axes[1, 0].plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=1)  # Reference line
-        axes[1, 0].set_title(f'{custom_ref} Neural Network - Accuracy', fontsize=16)
+        axes[1, 0].set_title(f'{custom_ref} - Accuracy', fontsize=16)
         axes[1, 0].set_xlabel('Actual Values', fontsize=14)
         axes[1, 0].set_ylabel('Predicted Values', fontsize=14)  
         axes[1, 0].legend(fontsize=12)
@@ -156,7 +196,7 @@ class Plots:
 
         sns.lineplot(x='order_month', y='Predicted', data=monthly_data, label='Predicted', ax=axes[1, 1])
         sns.lineplot(x='order_month', y='Actual', data=monthly_data, label='Actual', ax=axes[1, 1], color='black', linestyle='--')
-        axes[1, 1].set_title(f'{custom_ref} Neural Network - Monthly Trend Comparison (2022-2025)', fontsize=16)  
+        axes[1, 1].set_title(f'{custom_ref} - Monthly Trend Comparison (2022-2025)', fontsize=16)  
         axes[1, 1].set_xlabel('Month', fontsize=14)
         axes[1, 1].set_ylabel('Order Quantity', fontsize=14)
 
@@ -165,4 +205,4 @@ class Plots:
         plt.setp(axes[1, 1].get_xticklabels(), rotation=45, ha='right', fontsize=12)
 
         plt.tight_layout()
-        plt.show()
+        return fig  # Return the figure object
