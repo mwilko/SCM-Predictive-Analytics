@@ -23,12 +23,12 @@ with st.expander('Data'):
     st.dataframe(product_sales)  # Show entire dataset with scrolling for large data
     
     # Show the feature variables
-    st.write('**X**')
+    st.write('**Independant variables / Features (X)**')
     X = product_sales.drop('OrderQuantity', axis=1)
     st.dataframe(X)  # Show features in a scrollable table
     
     # Show the target variable
-    st.write('**y**')
+    st.write('**Dependant variable / Target (y)**')
     y = product_sales.OrderQuantity
     st.write(y)
 
@@ -70,12 +70,12 @@ with st.expander('Demand Forecasting'):
         st.dataframe(filtered_data)  # Ensure it's scrollable if data is large
 
         # Show the feature variables
-        st.write('**X**')
+        st.write('**Independant variables / Features (X)**')
         X = filtered_data.drop('OrderQuantity', axis=1)
         st.dataframe(X)  # Show features in a scrollable table
             
         # Show the target variable
-        st.write('**y**')
+        st.write('**Dependant variable / Target (y)**')
         y = filtered_data.OrderQuantity
         st.write(y)
 

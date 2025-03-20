@@ -149,44 +149,46 @@ import pandas as pd
 class Plots:
     @classmethod
     def overall(cls, df, y_data, x_data, predict_data, custom_ref):
+        # Set the dark background style
+        plt.style.use('dark_background')
+
         # Create subplots (2 rows, 2 columns: one for line plot, one for residual plot)
-        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(18, 12)) 
+        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(18, 12))
         fig.subplots_adjust(hspace=0.5, wspace=0.4)
 
         # Ensure 'OrderDate' is in datetime format
         df['OrderDate'] = pd.to_datetime(df['OrderDate'])
 
         # Time Series Comparison
-        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=y_data, label='Actual', ax=axes[0, 0])
-        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=predict_data, label='Predicted', ax=axes[0, 0])
-        axes[0, 0].set_title(f'{custom_ref} - Time Series', fontsize=16)
-        axes[0, 0].set_xlabel('Date', fontsize=14)  
-        axes[0, 0].set_ylabel('Order Quantity', fontsize=14)
+        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=y_data, label='Actual', ax=axes[0, 0], color='cyan')
+        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=predict_data, label='Predicted', ax=axes[0, 0], color='#fd5f1c')
+        axes[0, 0].set_title(f'{custom_ref} - Time Series', fontsize=16, color='white')
+        axes[0, 0].set_xlabel('Date', fontsize=14, color='white')
+        axes[0, 0].set_ylabel('Order Quantity', fontsize=14, color='white')
 
         # Set major locator to every month
-        axes[0, 0].xaxis.set_major_locator(mdates.MonthLocator())  # Show one tick per month
-        # '%b' for abbreviated month names, '%y' for the last two digits of the year
-        axes[0, 0].xaxis.set_major_formatter(mdates.DateFormatter('%b %y'))  # Show Month Year (e.g., 'Jan 24')
+        axes[0, 0].xaxis.set_major_locator(mdates.MonthLocator())
+        axes[0, 0].xaxis.set_major_formatter(mdates.DateFormatter('%b %y'))
 
         # Format the x-axis labels and avoid overlap
-        plt.setp(axes[0, 0].get_xticklabels(), rotation=45, ha='right', fontsize=12)
+        plt.setp(axes[0, 0].get_xticklabels(), rotation=45, ha='right', fontsize=12, color='white')
 
         # Residual Plot
         residuals = y_data - predict_data
-        sns.scatterplot(x=predict_data, y=residuals, alpha=0.6, ax=axes[0, 1])
-        axes[0, 1].axhline(0, color='r', linestyle='--')
-        axes[0, 1].set_title(f'{custom_ref} - Residuals', fontsize=16)  
-        axes[0, 1].set_xlabel('Predicted Values', fontsize=14)  
-        axes[0, 1].set_ylabel('Scaled Residuals', fontsize=14)
+        sns.scatterplot(x=predict_data, y=residuals, alpha=0.6, ax=axes[0, 1], color='yellow')
+        axes[0, 1].axhline(0, color='red', linestyle='--')
+        axes[0, 1].set_title(f'{custom_ref} - Residuals', fontsize=16, color='white')
+        axes[0, 1].set_xlabel('Predicted Values', fontsize=14, color='white')
+        axes[0, 1].set_ylabel('Residuals', fontsize=14, color='white')
 
         # Actual vs Predicted Scatter Plot
         min_val = min(y_data.min(), predict_data.min())
         max_val = max(y_data.max(), predict_data.max())
-        sns.scatterplot(x=y_data, y=predict_data, alpha=0.6, ax=axes[1, 0], label='Predicted')
-        axes[1, 0].plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=1)  # Reference line
-        axes[1, 0].set_title(f'{custom_ref} - Accuracy', fontsize=16)
-        axes[1, 0].set_xlabel('Actual Values', fontsize=14)
-        axes[1, 0].set_ylabel('Predicted Values', fontsize=14)  
+        sns.scatterplot(x=y_data, y=predict_data, alpha=0.6, ax=axes[1, 0], color='lime', label='Predicted')
+        axes[1, 0].plot([min_val, max_val], [min_val, max_val], 'red', linewidth=1)
+        axes[1, 0].set_title(f'{custom_ref} - Accuracy', fontsize=16, color='white')
+        axes[1, 0].set_xlabel('Actual Values', fontsize=14, color='white')
+        axes[1, 0].set_ylabel('Predicted Values', fontsize=14, color='white')
         axes[1, 0].legend(fontsize=12)
 
         # Monthly Trend Comparison
@@ -194,15 +196,15 @@ class Plots:
         monthly_data['Actual'] = y_data
         monthly_data['Predicted'] = predict_data
 
-        sns.lineplot(x='order_month', y='Predicted', data=monthly_data, label='Predicted', ax=axes[1, 1])
-        sns.lineplot(x='order_month', y='Actual', data=monthly_data, label='Actual', ax=axes[1, 1], color='black', linestyle='--')
-        axes[1, 1].set_title(f'{custom_ref} - Monthly Trend Comparison (2022-2025)', fontsize=16)  
-        axes[1, 1].set_xlabel('Month', fontsize=14)
-        axes[1, 1].set_ylabel('Order Quantity', fontsize=14)
+        sns.lineplot(x='order_month', y='Predicted', data=monthly_data, label='Predicted', ax=axes[1, 1], color='#fd5f1c')
+        sns.lineplot(x='order_month', y='Actual', data=monthly_data, label='Actual', ax=axes[1, 1], color='cyan', linestyle='--')
+        axes[1, 1].set_title(f'{custom_ref} - Monthly Trend Comparison (2022-2025)', fontsize=16, color='white')
+        axes[1, 1].set_xlabel('Month', fontsize=14, color='white')
+        axes[1, 1].set_ylabel('Order Quantity', fontsize=14, color='white')
 
         # Adjust x-tick labels after all plots are drawn
-        plt.setp(axes[0, 0].get_xticklabels(), rotation=45, ha='right', fontsize=12)
-        plt.setp(axes[1, 1].get_xticklabels(), rotation=45, ha='right', fontsize=12)
+        plt.setp(axes[0, 0].get_xticklabels(), rotation=45, ha='right', fontsize=12, color='white')
+        plt.setp(axes[1, 1].get_xticklabels(), rotation=45, ha='right', fontsize=12, color='white')
 
         plt.tight_layout()
         return fig  # Return the figure object
