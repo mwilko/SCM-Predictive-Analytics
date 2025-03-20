@@ -22,10 +22,8 @@ import matplotlib.dates as mdates
 # Evaluation Metrics
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-# Define the function to compute z-scores for each group
 
-
-def compute_group_zscore(group):
+def compute_group_zscore(group):  # Function to compute z-scores for each group
     group['z_score'] = np.abs(stats.zscore(group['OrderQuantity']))
     return group
 

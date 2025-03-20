@@ -5,8 +5,17 @@ import pandas as pd
 import sys
 import os
 
-# Add the absolute path to the 'src' directory
-sys.path.append('D:/SCM---ML-Visualisation/src')
+# Get the directory of the current script (main.py)
+current_dir = os.path.dirname(__file__)
+
+# Path to the "src" directory (relative to main.py)
+src_dir = os.path.abspath(os.path.join(current_dir, "..", "src"))
+
+# Add the "src" directory to Python's module search path
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)  # Prioritize the "src" directory
+
+# Now import from app_utils
 
 # Define dir for the dataset to be extracted
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
