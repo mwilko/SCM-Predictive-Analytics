@@ -43,14 +43,14 @@ class Evaluation:
         # Root Mean Squared Error (Sqrt of MSE, puts errors into label quantity which is easier to understand)
         rmse = np.sqrt(mse)
         # RSquared (Coefficient of determination by differs since using nonlinear models. Specifies how much variance the model captures)
-        r2 = r2_score(actual_data, predicted_data)
+        r2 = r2_score(actual_data, predicted_data) * 100
 
         # Use Markdown formatting for line breaks
         metrics = (
-            '##### -- Base Metrics, Predicted against Actual data --  \n'
+            '###### -- Base Metrics (Error & Variance) --  \n'
             f'###### Mean Absolute Error (MAE): {mae:.4f}  \n'
             f'###### Root Mean Squared Error (RMSE): {rmse:.4f}  \n'
-            f'###### Coefficient of Determination (R²): {r2:.4f}  \n'
+            f'###### Coefficient of Determination / RSquared (R²): {r2:.2f}%  \n'
             '---------------------  \n'
         )
         return metrics
@@ -68,21 +68,20 @@ class Evaluation:
         Error: NME, FGE = Scale of pred errors, too high or too low
         '''
         # Normalized Mean Bias (Shows if predictions are too high or low. E.g 0.25 = 25% too high)
-        nmb = np.mean(residuals) / (actual_mean + epsilon)
+        nmb = (np.mean(residuals) / (actual_mean + epsilon)) * 100
         # Fractional Bias (Similar to NMB but balances pred and actual. Compared to both pred and actual)
-        fb = 2 * np.mean(residuals) / (pred_mean + actual_mean + epsilon)
+        fb = (2 * np.mean(residuals) / (pred_mean + actual_mean + epsilon)) * 100
 
         # Normalized Mean Error (Shows how big errors are on avg)
-        nme = np.mean(np.abs(residuals)) / (actual_mean + epsilon)
+        nme = (np.mean(np.abs(residuals)) / (actual_mean + epsilon)) * 100
         # Fractional Gross Error (Similar to NME, balances pred and actual. Compared to both pred and actual)
-        fge = 2 * np.mean(np.abs(residuals)) / \
-            (pred_mean + actual_mean + epsilon)
+        fge = (2 * np.mean(np.abs(residuals)) / (pred_mean + actual_mean + epsilon)) * 100
 
         # Use Markdown formatting for line breaks
         metrics = (
-            '##### -- Additional Metrics, Predicted against Actual data --  \n'
-            f'###### Normalized Mean Bias/Fractional Bias (NMB/FB): {nmb:.4f}/{fb:.4f}  \n'
-            f'###### Normalized Mean Error/Fractional Gross Error (NME/FGE): {nme:.4f}/{fge:.4f}  \n'
+            '###### -- Advanced Metrics (Bias & +Error) --  \n'
+            f'###### Normalized Mean Bias/Fractional Bias (NMB/FB): {nmb:.2f}%/{fb:.2f}%  \n'
+            f'###### Normalized Mean Error/Fractional Gross Error (NME/FGE): {nme:.2f}%/{fge:.2f}%  \n'
             '---------------------  \n'
         )
         return metrics
@@ -204,8 +203,8 @@ class Plots:
         df['OrderDate'] = pd.to_datetime(df['OrderDate'])
 
         # Time Series Comparison
-        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=y_data, label='Actual', ax=axes[0, 0])
-        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=predict_data, label='Predicted', ax=axes[0, 0])
+        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=y_data, label='Actual', color='cyan', ax=axes[0, 0])
+        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=predict_data, label='Predicted', color='#fa5914', ax=axes[0, 0])
         axes[0, 0].set_title(f'{custom_ref} - Time Series', fontsize=16)
         axes[0, 0].set_xlabel('Date', fontsize=14)  
         axes[0, 0].set_ylabel('Order Quantity', fontsize=14)
@@ -242,8 +241,8 @@ class Plots:
         monthly_data['Actual'] = y_data
         monthly_data['Predicted'] = predict_data
 
-        sns.lineplot(x='order_month', y='Predicted', data=monthly_data, label='Predicted', ax=axes[1, 1])
-        sns.lineplot(x='order_month', y='Actual', data=monthly_data, label='Actual', ax=axes[1, 1], color='black', linestyle='--')
+        sns.lineplot(x='order_month', y='Predicted', data=monthly_data, label='Predicted', color='#fa5914',ax=axes[1, 1])
+        sns.lineplot(x='order_month', y='Actual', data=monthly_data, label='Actual', ax=axes[1, 1], color='cyan', linestyle='--')
         axes[1, 1].set_title(f'{custom_ref} - Monthly Trend Comparison (2022-2025)', fontsize=16)  
         axes[1, 1].set_xlabel('Month', fontsize=14)
         axes[1, 1].set_ylabel('Order Quantity', fontsize=14)

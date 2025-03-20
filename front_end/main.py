@@ -1,29 +1,25 @@
 from sklearn.model_selection import train_test_split
-from app_utils import Evaluation as eval, Transform as trans, Tuning as tune, Plots as plt
 import streamlit as st
 import pandas as pd
 import sys
 import os
 
-# Get the directory of the current script (main.py)
+# Ensure app_utils can be imported
 current_dir = os.path.dirname(__file__)
-
-# Path to the "src" directory (relative to main.py)
 src_dir = os.path.abspath(os.path.join(current_dir, "..", "src"))
-
 # Add the "src" directory to Python's module search path
 if src_dir not in sys.path:
     sys.path.insert(0, src_dir)  # Prioritize the "src" directory
+from app_utils import Evaluation as evalu, Transform as trans, Tuning as tune, Plots as plt
 
-# Now import from app_utils
 
 # Define dir for the dataset to be extracted
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 data_dir = os.path.join(base_dir, "datasets", "forecasting", "final")
 
-st.title('Predictive Analytics for Supply Chain Management')
+st.title('Predictive Analysis for Supply Chain Management')
 
-st.info('This app uses machine learning models to predict a certain criteria')
+st.info('Machine Learning and Data Visualisation for actionable insights!')
 
 with st.expander('Data'):
     # Show the processed dataset which will be used
@@ -119,10 +115,10 @@ with st.expander('Demand Forecasting'):
         st.pyplot(overall_plt)
 
         # Calculate and display base and advanced metrics of model preds
-        metrics = eval.metrics(y_val, val_pred_stacked)
+        metrics = evalu.metrics(y_val, val_pred_stacked)
         st.markdown(metrics, unsafe_allow_html=False)
 
-        advanced_metrics = eval.advanced_metrics(y_val, val_pred_stacked)
+        advanced_metrics = evalu.advanced_metrics(y_val, val_pred_stacked)
         st.markdown(advanced_metrics, unsafe_allow_html=False)
 
     else:
