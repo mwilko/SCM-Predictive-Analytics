@@ -33,32 +33,15 @@ from xgboost import XGBRegressor
 # sarimax (times series)
 import itertools
 
+# catboost
+from catboost import CatBoostRegressor
+
+# n-beat 
+from darts import TimeSeries
+from darts.models import NBEATSModel
+
+
 import matplotlib.pyplot as plt
-
-# def evaluate_model(model, X, y):
-#     print('Evaluating model...')
-
-#     print(f"Model: {model.__class__.__name__}")
-
-#     # K-fold cross validation (k=5)
-#     y_pred = cross_val_predict(model, X, y, cv=5)
-
-#     # Mean Absolute Error (MAE)
-#     mae = mean_absolute_error(y, y_pred)
-#     print(f"Mean Absolute Error (MAE): {mae:.4f}")
-
-#     # Mean Squared Error (MSE)
-#     mse = mean_squared_error(y, y_pred)
-#     print(f"Mean Squared Error (MSE): {mse:.4f}")
-
-#     # Root Mean Squared Error (RMSE)
-#     rmse = np.sqrt(mse)
-#     print(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
-
-#     # R-squared (Coefficient of Determination)
-#     r2 = r2_score(y, y_pred)
-#     print(f"R-squared (R²): {r2:.4f}")
-
 
 def evaluate_model_advanced(model, X, y, y_scaler):  # nn configuration
     """
@@ -104,7 +87,7 @@ def evaluate_model(model, X, y):
     print(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
     print(f"R-squared (R²): {r2:.4f}")
 
-    return {"MAE": mae, "MSE": mse, "RMSE": rmse, "R²": r2}
+    return {"MAE": mae, "RMSE": rmse, "R²": r2}
 
 
 def param_grids(model_type):
@@ -171,6 +154,34 @@ def param_grids(model_type):
             # L2 regularization (prevents overfitting)
             'reg_lambda': [1],
             'random_state': [42]
+        }
+    elif model_type == CatBoostRegressor.__name__: # CatBoost (Gradient-boosting algorithm) 
+        return {
+            'iterations': [500, 1000], # Number of trees (keep early_stopping_rounds=50)
+            'learning_rate': [0.03, 0.1],
+            'depth': [6, 8], # Tree depth (6-8 for balance)
+            'l2_leaf_reg': [1, 3], # L2 regularization to prevent overfit
+            'subsample': [0.8, 1.0], # Fraction of data to sample per tree
+            'colsample_bylevel': [0.8, 1.0], # Fraction of features to use per level
+            'min_data_in_leaf': [1, 5], # Avoid overfitting to small leaves
+            'grow_policy': ['SymmetricTree', 'Depthwise'],
+            'random_state': [42]
+        }
+    elif model_type == NBEATSModel.__name__: # N-BEAT Model (Time-Series)
+        return {
+            # Architecture
+            'input_chunk_length': [12, 24], # Look-back window (e.g., 12 months)
+            'output_chunk_length': [6, 12], # Forecast horizon
+            'num_stacks': [5, 10], # Stack count (each learns trend/seasonality)
+            'num_blocks': [1, 3], # Blocks per stack (complexity control)
+            'num_layers': [2, 4], # Layers per block (non-linearity depth)
+            'layer_widths': [128, 256], # Neurons per layer
+            'dropout': [0.0, 0.1], # Regularization for dense layers 
+            # Training
+            'optimizer_kwargs': [{'lr': 1e-3}, {'lr': 1e-4}], # Learning rate
+            'batch_size': [32, 64], # Smaller batches for stability
+            'n_epochs': [50, 100],
+            'random_state': [42] 
         }
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
