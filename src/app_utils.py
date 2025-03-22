@@ -12,6 +12,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from xgboost import XGBRegressor
+from catboost import CatBoostRegressor
 # Stacking ensemble
 from sklearn.linear_model import Ridge
 from sklearn.ensemble import StackingRegressor
@@ -75,7 +76,8 @@ class Evaluation:
         # Normalized Mean Error (Shows how big errors are on avg)
         nme = (np.mean(np.abs(residuals)) / (actual_mean + epsilon)) * 100
         # Fractional Gross Error (Similar to NME, balances pred and actual. Compared to both pred and actual)
-        fge = (2 * np.mean(np.abs(residuals)) / (pred_mean + actual_mean + epsilon)) * 100
+        fge = (2 * np.mean(np.abs(residuals)) /
+               (pred_mean + actual_mean + epsilon)) * 100
 
         # Use Markdown formatting for line breaks
         metrics = (
@@ -173,6 +175,18 @@ class Tuning:
         subsample=1.0
     )
 
+    catb_tuned = CatBoostRegressor(  # Tuned model hyperparams from catboost ipynb
+        # col_sample_bylevel=0.8,
+        depth=6,
+        grow_policy='Depthwise',
+        iterations=1000,
+        l2_leaf_reg=3,
+        learning_rate=0.03,
+        min_data_in_leaf=5,
+        subsample=1.0,
+        random_state=42
+    )
+
     # Stacking ensemble with RF MLP and MLP
 
     # Change 'alpha' value for different weighting
@@ -203,36 +217,43 @@ class Plots:
         df['OrderDate'] = pd.to_datetime(df['OrderDate'])
 
         # Time Series Comparison
-        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=y_data, label='Actual', color='cyan', ax=axes[0, 0])
-        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=predict_data, label='Predicted', color='#fa5914', ax=axes[0, 0])
+        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'],
+                     y=y_data, label='Actual', color='cyan', ax=axes[0, 0])
+        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=predict_data,
+                     label='Predicted', color='#fa5914', ax=axes[0, 0])
         axes[0, 0].set_title(f'{custom_ref} - Time Series', fontsize=16)
-        axes[0, 0].set_xlabel('Date', fontsize=14)  
+        axes[0, 0].set_xlabel('Date', fontsize=14)
         axes[0, 0].set_ylabel('Order Quantity', fontsize=14)
 
         # Set major locator to every month
-        axes[0, 0].xaxis.set_major_locator(mdates.MonthLocator())  # Show one tick per month
+        axes[0, 0].xaxis.set_major_locator(
+            mdates.MonthLocator())  # Show one tick per month
         # '%b' for abbreviated month names, '%y' for the last two digits of the year
-        axes[0, 0].xaxis.set_major_formatter(mdates.DateFormatter('%b %y'))  # Show Month Year (e.g., 'Jan 24')
+        axes[0, 0].xaxis.set_major_formatter(mdates.DateFormatter(
+            '%b %y'))  # Show Month Year (e.g., 'Jan 24')
 
         # Format the x-axis labels and avoid overlap
-        plt.setp(axes[0, 0].get_xticklabels(), rotation=45, ha='right', fontsize=12)
+        plt.setp(axes[0, 0].get_xticklabels(),
+                 rotation=45, ha='right', fontsize=12)
 
         # Residual Plot
         residuals = y_data - predict_data
         sns.scatterplot(x=predict_data, y=residuals, alpha=0.6, ax=axes[0, 1])
         axes[0, 1].axhline(0, color='r', linestyle='--')
-        axes[0, 1].set_title(f'{custom_ref} - Residuals', fontsize=16)  
-        axes[0, 1].set_xlabel('Predicted Values', fontsize=14)  
+        axes[0, 1].set_title(f'{custom_ref} - Residuals', fontsize=16)
+        axes[0, 1].set_xlabel('Predicted Values', fontsize=14)
         axes[0, 1].set_ylabel('Scaled Residuals', fontsize=14)
 
         # Actual vs Predicted Scatter Plot
         min_val = min(y_data.min(), predict_data.min())
         max_val = max(y_data.max(), predict_data.max())
-        sns.scatterplot(x=y_data, y=predict_data, alpha=0.6, ax=axes[1, 0], label='Predicted')
-        axes[1, 0].plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=1)  # Reference line
+        sns.scatterplot(x=y_data, y=predict_data, alpha=0.6,
+                        ax=axes[1, 0], label='Predicted')
+        axes[1, 0].plot([min_val, max_val], [min_val, max_val],
+                        'r--', linewidth=1)  # Reference line
         axes[1, 0].set_title(f'{custom_ref} - Accuracy', fontsize=16)
         axes[1, 0].set_xlabel('Actual Values', fontsize=14)
-        axes[1, 0].set_ylabel('Predicted Values', fontsize=14)  
+        axes[1, 0].set_ylabel('Predicted Values', fontsize=14)
         axes[1, 0].legend(fontsize=12)
 
         # Monthly Trend Comparison
@@ -241,15 +262,20 @@ class Plots:
         monthly_data['Actual'] = y_data
         monthly_data['Predicted'] = predict_data
 
-        sns.lineplot(x='order_month', y='Predicted', data=monthly_data, label='Predicted', color='#fa5914',ax=axes[1, 1])
-        sns.lineplot(x='order_month', y='Actual', data=monthly_data, label='Actual', ax=axes[1, 1], color='cyan', linestyle='--')
-        axes[1, 1].set_title(f'{custom_ref} - Monthly Trend Comparison (2022-2025)', fontsize=16)  
+        sns.lineplot(x='order_month', y='Predicted', data=monthly_data,
+                     label='Predicted', color='#fa5914', ax=axes[1, 1])
+        sns.lineplot(x='order_month', y='Actual', data=monthly_data,
+                     label='Actual', ax=axes[1, 1], color='cyan', linestyle='--')
+        axes[1, 1].set_title(
+            f'{custom_ref} - Monthly Trend Comparison (2022-2025)', fontsize=16)
         axes[1, 1].set_xlabel('Month', fontsize=14)
         axes[1, 1].set_ylabel('Order Quantity', fontsize=14)
 
         # Adjust x-tick labels after all plots are drawn
-        plt.setp(axes[0, 0].get_xticklabels(), rotation=45, ha='right', fontsize=12)
-        plt.setp(axes[1, 1].get_xticklabels(), rotation=45, ha='right', fontsize=12)
+        plt.setp(axes[0, 0].get_xticklabels(),
+                 rotation=45, ha='right', fontsize=12)
+        plt.setp(axes[1, 1].get_xticklabels(),
+                 rotation=45, ha='right', fontsize=12)
 
         plt.tight_layout()
         return fig  # Return the figure object

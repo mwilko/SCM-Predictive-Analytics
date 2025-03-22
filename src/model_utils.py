@@ -36,12 +36,13 @@ import itertools
 # catboost
 from catboost import CatBoostRegressor
 
-# n-beat 
+# n-beat
 from darts import TimeSeries
 from darts.models import NBEATSModel
 
 
 import matplotlib.pyplot as plt
+
 
 def evaluate_model_advanced(model, X, y, y_scaler):  # nn configuration
     """
@@ -155,33 +156,38 @@ def param_grids(model_type):
             'reg_lambda': [1],
             'random_state': [42]
         }
-    elif model_type == CatBoostRegressor.__name__: # CatBoost (Gradient-boosting algorithm) 
+    # CatBoost (Gradient-boosting algorithm)
+    elif model_type == CatBoostRegressor.__name__:
         return {
-            'iterations': [500, 1000], # Number of trees (keep early_stopping_rounds=50)
+            # Number of trees (keep early_stopping_rounds=50)
+            'iterations': [500, 1000],
             'learning_rate': [0.03, 0.1],
-            'depth': [6, 8], # Tree depth (6-8 for balance)
-            'l2_leaf_reg': [1, 3], # L2 regularization to prevent overfit
-            'subsample': [0.8, 1.0], # Fraction of data to sample per tree
-            'colsample_bylevel': [0.8, 1.0], # Fraction of features to use per level
-            'min_data_in_leaf': [1, 5], # Avoid overfitting to small leaves
+            'depth': [6, 8],  # Tree depth (6-8 for balance)
+            'l2_leaf_reg': [1, 3],  # L2 regularization to prevent overfit
+            'subsample': [0.8, 1.0],  # Fraction of data to sample per tree
+            # Fraction of features to use per level
+            'colsample_bylevel': [0.8, 1.0],
+            'min_data_in_leaf': [1, 5],  # Avoid overfitting to small leaves
             'grow_policy': ['SymmetricTree', 'Depthwise'],
             'random_state': [42]
         }
-    elif model_type == NBEATSModel.__name__: # N-BEAT Model (Time-Series)
+    elif model_type == NBEATSModel.__name__:  # N-BEAT Model (Time-Series)
         return {
             # Architecture
-            'input_chunk_length': [12, 24], # Look-back window (e.g., 12 months)
-            'output_chunk_length': [6, 12], # Forecast horizon
-            'num_stacks': [5, 10], # Stack count (each learns trend/seasonality)
-            'num_blocks': [1, 3], # Blocks per stack (complexity control)
-            'num_layers': [2, 4], # Layers per block (non-linearity depth)
-            'layer_widths': [128, 256], # Neurons per layer
-            'dropout': [0.0, 0.1], # Regularization for dense layers 
+            # Look-back window (e.g., 12 months)
+            'input_chunk_length': [12, 24],
+            'output_chunk_length': [6, 12],  # Forecast horizon
+            # Stack count (each learns trend/seasonality)
+            'num_stacks': [5, 10],
+            'num_blocks': [1, 3],  # Blocks per stack (complexity control)
+            'num_layers': [2, 4],  # Layers per block (non-linearity depth)
+            'layer_widths': [128, 256],  # Neurons per layer
+            'dropout': [0.0, 0.1],  # Regularization for dense layers
             # Training
-            'optimizer_kwargs': [{'lr': 1e-3}, {'lr': 1e-4}], # Learning rate
-            'batch_size': [32, 64], # Smaller batches for stability
+            'optimizer_kwargs': [{'lr': 1e-3}, {'lr': 1e-4}],  # Learning rate
+            'batch_size': [32, 64],  # Smaller batches for stability
             'n_epochs': [50, 100],
-            'random_state': [42] 
+            'random_state': [42]
         }
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
@@ -195,7 +201,7 @@ def find_best_hyperparameters(model, parameter_grid, X_train, y_train):
         estimator=model,
         param_grid=parameter_grid,
         cv=5,
-        n_jobs=-1, # Uses all CPU cores
+        n_jobs=-1,  # Uses all CPU cores
         verbose=2,
         # ensures function chooses metrics with the lowest MSE
         scoring='neg_mean_squared_error'
