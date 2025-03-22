@@ -1,3 +1,4 @@
+from darts.metrics import mae, mse, rmse, r2_score
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error
@@ -89,6 +90,58 @@ def evaluate_model(model, X, y):
     print(f"R-squared (R²): {r2:.4f}")
 
     return {"MAE": mae, "RMSE": rmse, "R²": r2}
+
+
+def evaluate_timeseries(model, val_series, val_covariates, horizon, target_scaler=None):
+    """
+    Evaluates a time series model on validation data.
+    Made to evaluate different time series models.
+
+    Args:
+        model: Trained time-series model (e.g., N-BEATS).
+        val_series (list): List of TimeSeries objects (actual values).
+        val_covariates (list): List of TimeSeries objects (features).
+        horizon (int): Number of steps to forecast.
+        target_scaler (Scaler): Optional scaler to inverse transform predictions.
+    """
+    all_y_true = []  # List for actual data
+    all_y_pred = []  # List for predicted data
+
+    for series, covariates in zip(val_series, val_covariates):
+        # Forecast `horizon` steps ahead
+        pred = model.predict(
+            n=horizon,
+            series=series[:-horizon],  # Training portion
+            # Features up to forecast start
+            past_covariates=covariates[:-horizon]
+        )
+
+        # Inverse scaling (if used)
+        if target_scaler:
+            pred = target_scaler.inverse_transform(pred)
+            series = target_scaler.inverse_transform(series)
+
+        # Extract values
+        y_true = series[-horizon:].univariate_values()  # Last `horizon` steps
+        y_pred = pred.univariate_values()
+
+        all_y_true.extend(y_true)
+        all_y_pred.extend(y_pred)
+
+    # Calculate metrics
+    metrics = {
+        "MAE": mean_absolute_error(all_y_true, all_y_pred),
+        "MSE": mean_squared_error(all_y_true, all_y_pred),
+        "RMSE": np.sqrt(mean_squared_error(all_y_true, all_y_pred)),
+        "R²": r2_score(all_y_true, all_y_pred)
+    }
+
+    print(f"MAE: {metrics['MAE']:.4f}")
+    print(f"MSE: {metrics['MSE']:.4f}")
+    print(f"RMSE: {metrics['RMSE']:.4f}")
+    print(f"R²: {metrics['R²']:.4f}")
+
+    return metrics
 
 
 def param_grids(model_type):
