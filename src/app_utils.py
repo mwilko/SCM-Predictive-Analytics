@@ -20,8 +20,11 @@ from sklearn.ensemble import StackingRegressor
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
-# Evaluation Metrics
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+# Training / Evaluation Metrics
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, root_mean_squared_error
+from sklearn.model_selection import train_test_split
+# Application
+import streamlit as st
 
 
 def compute_group_zscore(group):  # Function to compute z-scores for each group
@@ -47,14 +50,46 @@ class Evaluation:
         r2 = r2_score(actual_data, predicted_data) * 100
 
         # Use Markdown formatting for line breaks
-        metrics = (
+        metrics_msg = (
             '###### -- Base Metrics (Error & Variance) --  \n'
             f'###### Mean Absolute Error (MAE): {mae:.4f}  \n'
             f'###### Root Mean Squared Error (RMSE): {rmse:.4f}  \n'
             f'###### Coefficient of Determination / RSquared (R²): {r2:.2f}%  \n'
             '---------------------  \n'
         )
-        return metrics
+        return metrics_msg
+
+    @classmethod
+    def run_model(cls, model_name, model, features, target, dataset, customer_code):
+        # Data preprocessing
+        X_train, X_val, y_train, y_val = train_test_split(
+            features, target, test_size=0.2, random_state=42)
+        X_train_preprocessed, X_val_preprocessed = Transform.transform_data(
+            X_train, X_val, features)
+
+        # Train and evaluate
+        model.fit(X_train_preprocessed, y_train)
+        val_pred = model.predict(X_val_preprocessed)
+
+        # Store metrics
+        results = results[model_name] = {
+            'MAE': mean_absolute_error(y_val, val_pred),
+            'MSE': mean_squared_error(y_val, val_pred),
+            'RMSE': root_mean_squared_error(y_val, val_pred),
+            'R2': r2_score(y_val, val_pred)
+        }
+
+        # Display results
+        st.subheader(f'{model_name} Performance')
+        st.metric('MAE', f"{results[model_name]['MAE']:.4f}")
+        st.metric('MSE', f"{results[model_name]['MSE']:.4f}")
+        st.metric('RMSE', f"{results[model_name]['RMSE']:.4f}")
+        st.metric('R² (R-squared) Score', f"{results[model_name]['R2']:.4f}")
+
+        # Visualizations
+        fig = Plots.overall(dataset, y_val, X_val, val_pred, customer_code)
+        st.pyplot(fig)
+        return results
 
     @classmethod
     # Additional Bias and Error metrics for regression tasks
