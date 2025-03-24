@@ -37,10 +37,10 @@ import itertools
 # catboost
 from catboost import CatBoostRegressor
 
-# n-beat
+# n-beat (time series)
 from darts import TimeSeries
 from darts.models import NBEATSModel
-
+from itertools import product
 
 import matplotlib.pyplot as plt
 
@@ -225,42 +225,106 @@ def param_grids(model_type):
             'random_state': [42]
         }
     elif model_type == NBEATSModel.__name__:  # N-BEAT Model (Time-Series)
-        return {
-            # Architecture
-            # Look-back window (e.g., 12 months)
-            'input_chunk_length': [12, 24],
-            'output_chunk_length': [6, 12],  # Forecast horizon
-            # Stack count (each learns trend/seasonality)
-            'num_stacks': [5, 10],
-            'num_blocks': [1, 3],  # Blocks per stack (complexity control)
-            'num_layers': [2, 4],  # Layers per block (non-linearity depth)
-            'layer_widths': [128, 256],  # Neurons per layer
-            'dropout': [0.0, 0.1],  # Regularization for dense layers
-            # Training
-            'optimizer_kwargs': [{'lr': 1e-3}, {'lr': 1e-4}],  # Learning rate
-            'batch_size': [32, 64],  # Smaller batches for stability
-            'n_epochs': [50, 100],
-            'random_state': [42]
-        }
+        # Define parameter grid for NBEATSModel
+        input_chunk_length_values = [6]
+        output_chunk_length_values = [1]
+        num_stacks_values = [5, 10]
+        num_blocks_values = [1, 3]
+        num_layers_values = [2, 4]
+        layer_widths_values = [128, 256]
+        dropout_values = [0.0, 0.1]
+        optimizer_kwargs_values = [{'lr': 1e-3}, {'lr': 1e-4}]
+        batch_size_values = [32, 64]
+        n_epochs_values = [50, 100]
+        random_state_values = [42]
+
+        # Create a list of dictionaries with all combinations of parameters
+        param_combinations = product(
+            input_chunk_length_values, output_chunk_length_values, num_stacks_values,
+            num_blocks_values, num_layers_values, layer_widths_values, dropout_values,
+            optimizer_kwargs_values, batch_size_values, n_epochs_values, random_state_values
+        )
+
+        # Convert each combination into a dictionary
+        param_grid = [
+            {
+                'input_chunk_length': input_chunk_length,
+                'output_chunk_length': output_chunk_length,
+                'num_stacks': num_stacks,
+                'num_blocks': num_blocks,
+                'num_layers': num_layers,
+                'layer_widths': layer_widths,
+                'dropout': dropout,
+                'optimizer_kwargs': optimizer_kwargs,
+                'batch_size': batch_size,
+                'n_epochs': n_epochs,
+                'random_state': random_state
+            }
+            for input_chunk_length, output_chunk_length, num_stacks, num_blocks, num_layers,
+            layer_widths, dropout, optimizer_kwargs, batch_size, n_epochs, random_state in param_combinations
+        ]
+
+        return param_grid
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
 
 
-def find_best_hyperparameters(model, parameter_grid, X_train, y_train):
-    model_type = model.__class__.__name__
+def find_best_hyperparameters(model_class, parameter_grid, X_train, y_train):
+    model_type = model_class.__name__
 
-    print(f'Model type: {model_type}')
-    grid_search = GridSearchCV(
-        estimator=model,
-        param_grid=parameter_grid,
-        cv=5,
-        n_jobs=-1,  # Uses all CPU cores
-        verbose=2,
-        # ensures function chooses metrics with the lowest MSE
-        scoring='neg_mean_squared_error'
-    )
-    grid_search.fit(X_train, y_train)
+    # Modified due to Time series models, e.g N-BEATS, couldn't use Gridsearch
+    if model_type in ["RandomForestRegressor", "DecisionTreeRegressor", "LinearRegression", "MLPRegressor", "XGBRegressor", "CatBoostRegressor"]:
+        # For Scikit-learn models, use GridSearchCV
+        print(f"Performing GridSearchCV for {model_type}...")
+        grid_search = GridSearchCV(
+            estimator=model_class(),
+            param_grid=parameter_grid,
+            cv=5,
+            n_jobs=-1,  # Uses all CPU cores
+            verbose=2,
+            scoring='neg_mean_squared_error'
+        )
+        grid_search.fit(X_train, y_train)
+        best_params = grid_search.best_params_
+        print(f'{model_type} Best Parameters: {best_params}')
 
-    print(f'{model.__class__.__name__} Best Parameters: {grid_search.best_params_}')
+    elif model_type == "NBEATSModel":  # Further edit if other models are Time Series
+        # For NBEATSModel (Darts), do manual hyperparameter search
+        best_params = None
+        best_score = float('inf')
 
-    return grid_search.best_params_
+        for params in parameter_grid:
+            try:
+                # Extract the input_chunk_length and output_chunk_length manually
+                input_chunk_length = params['input_chunk_length']
+                output_chunk_length = params['output_chunk_length']
+
+                # Create the model with the current set of parameters
+                model = model_class(
+                    input_chunk_length=input_chunk_length,
+                    output_chunk_length=output_chunk_length,
+                    **{key: value for key, value in params.items() if key not in ['input_chunk_length', 'output_chunk_length']}
+                )
+
+                # Train the model
+                model.fit(X_train, verbose=True)
+
+                # Forecast and evaluate
+                forecast = model.predict(len(y_train), series=X_train)
+                score = mean_squared_error(y_train.values(), forecast.values())
+
+                if score < best_score:
+                    best_score = score
+                    best_params = params
+
+            except Exception as e:
+                print(f"Error with params {params}: {e}")
+                continue
+
+        print(
+            f"Best parameters for {model_type}: {best_params} with MSE: {best_score}")
+
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}")
+
+    return best_params
