@@ -71,57 +71,42 @@ class Evaluation:
         model.fit(X_train_preprocessed, y_train)
         val_pred = model.predict(X_val_preprocessed)
 
-        # Store metrics
-        results = results[model_name] = {
-            'MAE': mean_absolute_error(y_val, val_pred),
-            'MSE': mean_squared_error(y_val, val_pred),
-            'RMSE': root_mean_squared_error(y_val, val_pred),
-            'R2': r2_score(y_val, val_pred)
+        # Calculate metrics
+        mae = mean_absolute_error(y_val, val_pred)
+        mse = mean_squared_error(y_val, val_pred)
+        rmse = root_mean_squared_error(y_val, val_pred)
+        r2 = r2_score(y_val, val_pred)
+
+        # Store metrics in a dictionary
+        results = {
+            'MAE': mae,
+            'MSE': mse,
+            'RMSE': rmse,
+            'R2': r2
         }
 
-        # Display results
-        st.subheader(f'{model_name} Performance')
-        st.metric('MAE', f"{results[model_name]['MAE']:.4f}")
-        st.metric('MSE', f"{results[model_name]['MSE']:.4f}")
-        st.metric('RMSE', f"{results[model_name]['RMSE']:.4f}")
-        st.metric('R² (R-squared) Score', f"{results[model_name]['R2']:.4f}")
+        # Create tabs for the results
+        visualization_tab, results_tab, = st.tabs(
+            ["Visualization", "Model Metrics"])
 
-        # Visualizations
-        fig = Plots.overall(dataset, y_val, X_val, val_pred, customer_code)
-        st.pyplot(fig)
+        # Display visualization in the first tab
+        with visualization_tab:
+            st.write(f'{model_name}')
+            fig = Plots.overall(dataset, y_val, X_val, val_pred, customer_code)
+            st.pyplot(fig)
+
+        # Display results in the second tab
+        with results_tab:
+            st.subheader(f'{model_name} Performance')
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric('MAE', f"{mae:.4f}")
+                st.metric('MSE', f"{mse:.4f}")
+            with col2:
+                st.metric('RMSE', f"{rmse:.4f}")
+                st.metric('R² (R-squared) Score', f"{r2:.4f}")
+
         return results
-
-    @classmethod
-    # Additional Bias and Error metrics for regression tasks
-    def advanced_metrics(cls, actual_data, predicted_data):
-        residuals = predicted_data - actual_data
-        actual_mean = np.mean(actual_data)
-        pred_mean = np.mean(predicted_data)
-        # Epsilon avoids calculation fail if passed values are 0 (Small enough value to not skew score)
-        epsilon = 1e-9
-        '''
-        Bias: NMB, FB = Preds are over or under predicting
-        Error: NME, FGE = Scale of pred errors, too high or too low
-        '''
-        # Normalized Mean Bias (Shows if predictions are too high or low. E.g 0.25 = 25% too high)
-        nmb = (np.mean(residuals) / (actual_mean + epsilon)) * 100
-        # Fractional Bias (Similar to NMB but balances pred and actual. Compared to both pred and actual)
-        fb = (2 * np.mean(residuals) / (pred_mean + actual_mean + epsilon)) * 100
-
-        # Normalized Mean Error (Shows how big errors are on avg)
-        nme = (np.mean(np.abs(residuals)) / (actual_mean + epsilon)) * 100
-        # Fractional Gross Error (Similar to NME, balances pred and actual. Compared to both pred and actual)
-        fge = (2 * np.mean(np.abs(residuals)) /
-               (pred_mean + actual_mean + epsilon)) * 100
-
-        # Use Markdown formatting for line breaks
-        metrics = (
-            '###### -- Advanced Metrics (Bias & +Error) --  \n'
-            f'###### Normalized Mean Bias/Fractional Bias (NMB/FB): {nmb:.2f}%/{fb:.2f}%  \n'
-            f'###### Normalized Mean Error/Fractional Gross Error (NME/FGE): {nme:.2f}%/{fge:.2f}%  \n'
-            '---------------------  \n'
-        )
-        return metrics
 
 
 class Transform:

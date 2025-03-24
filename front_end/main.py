@@ -64,87 +64,134 @@ with st.expander('Data Visualisations'):
                      y='OrderQuantity', color='ProductGroup')
 
 with st.expander('Demand Forecasting'):
-    model_choices = [
-        'Random Forest',
-        'Multi-Layer Perceptron (MLP/Neural Network)',
-        'XGBoost',
-        'CatBoost',
-        'N-BEATS (Time Series)',
-        'Model with best predictions'
-    ]
+    # Create tabs for model selection, data view, and results
+    select_tab, data_tab, results_tab = st.tabs(
+        ["Select Model", "Data View", "Results"])
 
-    chosen_model = st.selectbox('Select learning model', model_choices)
-    # Save user entered customer code
-    customer_code = st.text_input('Enter a valid Customer Code, i.e ALB...')
+    with select_tab:
+        model_choices = [
+            'Best Predictive Accuracy',
+            'Random Forest',
+            'Multi-Layer Perceptron (MLP/Neural Network)',
+            'XGBoost',
+            'CatBoost',
+            'N-BEATS (Time Series)',
+        ]
 
-    # Check if user has entered a customer code
-    if customer_code:
-        filtered_data = product_sales[product_sales['ProductGroup']
-                                      == customer_code]
+        chosen_model = st.selectbox('Select learning model', model_choices)
+        # Save user entered customer code
+        customer_code = st.text_input(
+            'Enter a valid Customer Code, i.e ALB...')
 
-        if filtered_data.empty:
-            st.write('No data found for the given customer code.')
+    with data_tab:
+        # Only show data if user has entered a customer code
+        if customer_code:
+            filtered_data = product_sales[product_sales['ProductGroup']
+                                          == customer_code]
+
+            if filtered_data.empty:
+                st.write('No data found for the given customer code.')
+            else:
+                st.write(f'Data for customer code: {customer_code}')
+
+                # Perform zscore removal for abnormally high OrderQuantities with related products
+                # THIS IS CONTROVERSIAL IN THIS SCENARIO BECAUSE ITS REMOVING ACTUAL CUSTOMER ORDERS
+                filtered_data = trans.compute_zscore(filtered_data)
+
+                # Display the filtered data
+                st.subheader("Filtered Data")
+                st.dataframe(filtered_data)
+
+                # Show the feature variables
+                st.subheader('**Independent variables / Features (X)**')
+                X = filtered_data.drop('OrderQuantity', axis=1)
+                st.dataframe(X)
+
+                # Show the target variable
+                st.subheader('**Dependent variable / Target (y)**')
+                y = filtered_data.OrderQuantity
+                st.write(y)
         else:
-            st.write(f'Data for customer code: {customer_code}')
+            st.write("Please enter a customer code to view data.")
 
-            # Perform zscore removal for abnormally high OrderQuantities with related products
-            # THIS IS CONTROVERSIAL IN THIS SCENARIO BECAUSE ITS REMOVING ACTUAL CUSTOMER ORDERS
-            filtered_data = trans.compute_zscore(filtered_data)
-            # Ensure it's scrollable if data is large
-            st.dataframe(filtered_data)
+    with results_tab:
+        # Only show results if user has entered a customer code
+        if customer_code:
+            filtered_data = product_sales[product_sales['ProductGroup']
+                                          == customer_code]
 
-            # Show the feature variables
-            st.write('**Independant variables / Features (X)**')
-            X = filtered_data.drop('OrderQuantity', axis=1)
-            st.dataframe(X)
+            if filtered_data.empty:
+                st.write('No data found for the given customer code.')
+            else:
+                # Ensure data is processed - we need to make sure we use the same processed data from the data tab
+                filtered_data = trans.compute_zscore(filtered_data)
+                X = filtered_data.drop('OrderQuantity', axis=1)
+                y = filtered_data.OrderQuantity
 
-            # Show the target variable
-            st.write('**Dependant variable / Target (y)**')
-            y = filtered_data.OrderQuantity
-            st.write(y)
+                # '''
+                # ML model Train and test code --->
+                # '''
+                st.info('Model predictions could take a few minutes...')
 
-            # '''
-            # ML model Train and test code --->
-            # '''
-            st.info('Model predictions could take a few minutes...')
+                # Define models with tuned params
+                models = {
+                    'Random Forest': tune.rf_tuned,
+                    'Multi-Layer Perceptron (MLP/Neural Network)': tune.mlp_tuned,
+                    'XGBoost': tune.xbg_tuned,
+                    'CatBoost': tune.catb_tuned,
+                    # 'N-BEATS': tune.nbeats_tuned
+                }
 
-            # Define models with tuned params
-            models = {
-                'Random Forest': tune.rf_tuned,
-                'MLP': tune.mlp_tuned,
-                'XGBoost': tune.xbg_tuned,
-                'CatBoost': tune.catb_tuned,
-                # 'N-BEATS': tune.nbeats_tuned
-            }
+                # Run all the models and display the model with the best performance for the customer
+                if chosen_model == 'Best Predictive Accuracy':
+                    model_results = {}  # Initialize dictionary to hold results from all models
 
-            results = []
-            tscv = TimeSeriesSplit(n_splits=5)
+                    for name, model in models.items():
+                        with st.spinner(f'Running {name}...'):
+                            try:
+                                model_results[name] = evalu.run_model(
+                                    name, model, X, y, filtered_data, customer_code)
+                            except Exception as e:
+                                st.error(f"Error with {name}: {str(e)}")
 
-            # Run all the models and display the model with the best performance for the cust
-            if chosen_model == 'Model with best predictions':
-                for name, model in models.items():
-                    with st.spinner(f'Running {name}...'):
-                        try:
-                            results.append(evalu.run_model(
-                                name, model, X, y, filtered_data, customer_code))
-                        except Exception as e:
-                            st.error(f"Error with {name}: {str(e)}")
+                    if model_results:
+                        for model, results in model_results.items():
+                            model_results[model] = {metric: f"{value:.4f}" if isinstance(value, (int, float)) else value
+                                                    for metric, value in results.items()}
 
-                # Display model with best performance
-                st.subheader("Model Comparison")
-                comparison_df = pd.DataFrame(results).T
-                st.dataframe(comparison_df.style.highlight_min(
-                    axis=0, color='#fffd75'))
-                best_model = comparison_df['RMSE'].idxmin()
-                st.success(
-                    f"Best performing model: {best_model} (Lowest RMSE)")
+                        comparison_df = pd.DataFrame(model_results)
+                        # Transpose so models are columns and metrics are rows
+                        comparison_df = comparison_df.T
 
-            else:  # Run the single model the user selected
-                with st.spinner(f'Running {chosen_model}...'):
-                    try:
-                        evalu.run_model(
-                            chosen_model, models[chosen_model], X, y, filtered_data, customer_code)
-                    except Exception as e:
-                        st.error(f"Error with {chosen_model}: {str(e)}")
-    else:  # User entered customer isn't avaliable
-        st.write("Please enter a customer code to filter the data.")
+                        st.subheader("Model Comparison")
+                        # Create a styled dataframe - highlight minimum values for error metrics
+                        error_metrics = ['RMSE', 'MAE', 'MSE']
+                        styled_df = comparison_df.style.highlight_min(
+                            axis=0, subset=error_metrics, color='#5fbb08')
+
+                        # Highlight maximum values for R2 for variance capture
+                        styled_df = styled_df.highlight_max(
+                            axis=0, subset=['R2'], color='#6bd10a')
+
+                        st.dataframe(styled_df)
+
+                        # Find best model based on RMSE (Avg order quantity error value)
+                        if 'RMSE' in comparison_df.columns:
+                            best_model = comparison_df['RMSE'].idxmin()
+                            st.success(
+                                f"Best performing model: {best_model} (Lowest RMSE)")
+
+                else:  # Run the single model the user selected
+                    if chosen_model in models:  # Check if model exists in the dictionary
+                        with st.spinner(f'Running {chosen_model}...'):
+                            try:
+                                evalu.run_model(
+                                    chosen_model, models[chosen_model], X, y, filtered_data, customer_code)
+                            except Exception as e:
+                                st.error(
+                                    f"Error with {chosen_model}: {str(e)}")
+                    else:
+                        st.error(
+                            f"Model '{chosen_model}' is not implemented or available.")
+        else:
+            st.write("Please enter a customer code to view results.")
