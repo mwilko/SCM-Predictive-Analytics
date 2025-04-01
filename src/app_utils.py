@@ -12,6 +12,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from xgboost import XGBRegressor
+from catboost import CatBoostRegressor
 # Stacking ensemble
 from sklearn.linear_model import Ridge
 from sklearn.ensemble import StackingRegressor
@@ -19,8 +20,11 @@ from sklearn.ensemble import StackingRegressor
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
-# Evaluation Metrics
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+# Training / Evaluation Metrics
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, root_mean_squared_error
+from sklearn.model_selection import train_test_split
+# Application
+import streamlit as st
 
 
 def compute_group_zscore(group):  # Function to compute z-scores for each group
@@ -46,45 +50,63 @@ class Evaluation:
         r2 = r2_score(actual_data, predicted_data) * 100
 
         # Use Markdown formatting for line breaks
-        metrics = (
+        metrics_msg = (
             '###### -- Base Metrics (Error & Variance) --  \n'
             f'###### Mean Absolute Error (MAE): {mae:.4f}  \n'
             f'###### Root Mean Squared Error (RMSE): {rmse:.4f}  \n'
             f'###### Coefficient of Determination / RSquared (R²): {r2:.2f}%  \n'
             '---------------------  \n'
         )
-        return metrics
+        return metrics_msg
 
     @classmethod
-    # Additional Bias and Error metrics for regression tasks
-    def advanced_metrics(cls, actual_data, predicted_data):
-        residuals = predicted_data - actual_data
-        actual_mean = np.mean(actual_data)
-        pred_mean = np.mean(predicted_data)
-        # Epsilon avoids calculation fail if passed values are 0 (Small enough value to not skew score)
-        epsilon = 1e-9
-        '''
-        Bias: NMB, FB = Preds are over or under predicting
-        Error: NME, FGE = Scale of pred errors, too high or too low
-        '''
-        # Normalized Mean Bias (Shows if predictions are too high or low. E.g 0.25 = 25% too high)
-        nmb = (np.mean(residuals) / (actual_mean + epsilon)) * 100
-        # Fractional Bias (Similar to NMB but balances pred and actual. Compared to both pred and actual)
-        fb = (2 * np.mean(residuals) / (pred_mean + actual_mean + epsilon)) * 100
+    def run_model(cls, model_name, model, features, target, dataset, customer_code):
+        # Data preprocessing
+        X_train, X_val, y_train, y_val = train_test_split(
+            features, target, test_size=0.2, random_state=42)
+        X_train_preprocessed, X_val_preprocessed = Transform.transform_data(
+            X_train, X_val, features)
 
-        # Normalized Mean Error (Shows how big errors are on avg)
-        nme = (np.mean(np.abs(residuals)) / (actual_mean + epsilon)) * 100
-        # Fractional Gross Error (Similar to NME, balances pred and actual. Compared to both pred and actual)
-        fge = (2 * np.mean(np.abs(residuals)) / (pred_mean + actual_mean + epsilon)) * 100
+        # Train and evaluate
+        model.fit(X_train_preprocessed, y_train)
+        val_pred = model.predict(X_val_preprocessed)
 
-        # Use Markdown formatting for line breaks
-        metrics = (
-            '###### -- Advanced Metrics (Bias & +Error) --  \n'
-            f'###### Normalized Mean Bias/Fractional Bias (NMB/FB): {nmb:.2f}%/{fb:.2f}%  \n'
-            f'###### Normalized Mean Error/Fractional Gross Error (NME/FGE): {nme:.2f}%/{fge:.2f}%  \n'
-            '---------------------  \n'
-        )
-        return metrics
+        # Calculate metrics
+        mae = mean_absolute_error(y_val, val_pred)
+        mse = mean_squared_error(y_val, val_pred)
+        rmse = root_mean_squared_error(y_val, val_pred)
+        r2 = r2_score(y_val, val_pred)
+
+        # Store metrics in a dictionary
+        results = {
+            'MAE': mae,
+            'MSE': mse,
+            'RMSE': rmse,
+            'R2': r2
+        }
+
+        # Create tabs for the results
+        visualization_tab, results_tab, = st.tabs(
+            ["Visualization", "Model Metrics"])
+
+        # Display visualization in the first tab
+        with visualization_tab:
+            st.write(f'{model_name}')
+            fig = Plots.overall(dataset, y_val, X_val, val_pred, customer_code)
+            st.pyplot(fig)
+
+        # Display results in the second tab
+        with results_tab:
+            st.subheader(f'{model_name} Performance')
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric('MAE', f"{mae:.4f}")
+                st.metric('MSE', f"{mse:.4f}")
+            with col2:
+                st.metric('RMSE', f"{rmse:.4f}")
+                st.metric('R² (R-squared) Score', f"{r2:.4f}")
+
+        return results
 
 
 class Transform:
@@ -173,6 +195,18 @@ class Tuning:
         subsample=1.0
     )
 
+    catb_tuned = CatBoostRegressor(  # Tuned model hyperparams from catboost ipynb
+        # col_sample_bylevel=0.8,
+        depth=6,
+        grow_policy='Depthwise',
+        iterations=1000,
+        l2_leaf_reg=3,
+        learning_rate=0.03,
+        min_data_in_leaf=5,
+        subsample=1.0,
+        random_state=42
+    )
+
     # Stacking ensemble with RF MLP and MLP
 
     # Change 'alpha' value for different weighting
@@ -203,36 +237,43 @@ class Plots:
         df['OrderDate'] = pd.to_datetime(df['OrderDate'])
 
         # Time Series Comparison
-        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=y_data, label='Actual', color='cyan', ax=axes[0, 0])
-        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=predict_data, label='Predicted', color='#fa5914', ax=axes[0, 0])
+        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'],
+                     y=y_data, label='Actual', color='cyan', ax=axes[0, 0])
+        sns.lineplot(x=df.loc[y_data.index, 'OrderDate'], y=predict_data,
+                     label='Predicted', color='#fa5914', ax=axes[0, 0])
         axes[0, 0].set_title(f'{custom_ref} - Time Series', fontsize=16)
-        axes[0, 0].set_xlabel('Date', fontsize=14)  
+        axes[0, 0].set_xlabel('Date', fontsize=14)
         axes[0, 0].set_ylabel('Order Quantity', fontsize=14)
 
         # Set major locator to every month
-        axes[0, 0].xaxis.set_major_locator(mdates.MonthLocator())  # Show one tick per month
+        axes[0, 0].xaxis.set_major_locator(
+            mdates.MonthLocator())  # Show one tick per month
         # '%b' for abbreviated month names, '%y' for the last two digits of the year
-        axes[0, 0].xaxis.set_major_formatter(mdates.DateFormatter('%b %y'))  # Show Month Year (e.g., 'Jan 24')
+        axes[0, 0].xaxis.set_major_formatter(mdates.DateFormatter(
+            '%b %y'))  # Show Month Year (e.g., 'Jan 24')
 
         # Format the x-axis labels and avoid overlap
-        plt.setp(axes[0, 0].get_xticklabels(), rotation=45, ha='right', fontsize=12)
+        plt.setp(axes[0, 0].get_xticklabels(),
+                 rotation=45, ha='right', fontsize=12)
 
         # Residual Plot
         residuals = y_data - predict_data
         sns.scatterplot(x=predict_data, y=residuals, alpha=0.6, ax=axes[0, 1])
         axes[0, 1].axhline(0, color='r', linestyle='--')
-        axes[0, 1].set_title(f'{custom_ref} - Residuals', fontsize=16)  
-        axes[0, 1].set_xlabel('Predicted Values', fontsize=14)  
+        axes[0, 1].set_title(f'{custom_ref} - Residuals', fontsize=16)
+        axes[0, 1].set_xlabel('Predicted Values', fontsize=14)
         axes[0, 1].set_ylabel('Scaled Residuals', fontsize=14)
 
         # Actual vs Predicted Scatter Plot
         min_val = min(y_data.min(), predict_data.min())
         max_val = max(y_data.max(), predict_data.max())
-        sns.scatterplot(x=y_data, y=predict_data, alpha=0.6, ax=axes[1, 0], label='Predicted')
-        axes[1, 0].plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=1)  # Reference line
+        sns.scatterplot(x=y_data, y=predict_data, alpha=0.6,
+                        ax=axes[1, 0], label='Predicted')
+        axes[1, 0].plot([min_val, max_val], [min_val, max_val],
+                        'r--', linewidth=1)  # Reference line
         axes[1, 0].set_title(f'{custom_ref} - Accuracy', fontsize=16)
         axes[1, 0].set_xlabel('Actual Values', fontsize=14)
-        axes[1, 0].set_ylabel('Predicted Values', fontsize=14)  
+        axes[1, 0].set_ylabel('Predicted Values', fontsize=14)
         axes[1, 0].legend(fontsize=12)
 
         # Monthly Trend Comparison
@@ -241,15 +282,20 @@ class Plots:
         monthly_data['Actual'] = y_data
         monthly_data['Predicted'] = predict_data
 
-        sns.lineplot(x='order_month', y='Predicted', data=monthly_data, label='Predicted', color='#fa5914',ax=axes[1, 1])
-        sns.lineplot(x='order_month', y='Actual', data=monthly_data, label='Actual', ax=axes[1, 1], color='cyan', linestyle='--')
-        axes[1, 1].set_title(f'{custom_ref} - Monthly Trend Comparison (2022-2025)', fontsize=16)  
+        sns.lineplot(x='order_month', y='Predicted', data=monthly_data,
+                     label='Predicted', color='#fa5914', ax=axes[1, 1])
+        sns.lineplot(x='order_month', y='Actual', data=monthly_data,
+                     label='Actual', ax=axes[1, 1], color='cyan', linestyle='--')
+        axes[1, 1].set_title(
+            f'{custom_ref} - Monthly Trend Comparison (2022-2025)', fontsize=16)
         axes[1, 1].set_xlabel('Month', fontsize=14)
         axes[1, 1].set_ylabel('Order Quantity', fontsize=14)
 
         # Adjust x-tick labels after all plots are drawn
-        plt.setp(axes[0, 0].get_xticklabels(), rotation=45, ha='right', fontsize=12)
-        plt.setp(axes[1, 1].get_xticklabels(), rotation=45, ha='right', fontsize=12)
+        plt.setp(axes[0, 0].get_xticklabels(),
+                 rotation=45, ha='right', fontsize=12)
+        plt.setp(axes[1, 1].get_xticklabels(),
+                 rotation=45, ha='right', fontsize=12)
 
         plt.tight_layout()
         return fig  # Return the figure object
