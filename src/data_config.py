@@ -2,10 +2,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from scipy import stats
-from datasets import product_sales
-import sys
-sys.path.append('../src')
+import pandas as pd
+from pathlib import Path
 
+# Import the synthetic dataset
+here = Path(__file__).resolve().parent
+
+# Go up one to the project root, then into datasets/forecasting/final
+project_root = here.parent
+csv_path = project_root / "datasets" / "forecasting" / "final" / "product_sales.csv"
+
+# Load sythetic dataset
+product_sales = pd.read_csv(csv_path, sep=",", header=0)
 
 class ProductHandler:
     # Class variable to store customer code data across all instances

@@ -44,6 +44,10 @@ from itertools import product
 
 import matplotlib.pyplot as plt
 
+# TabNet imports
+from pytorch_tabnet.tab_model import TabNetRegressor
+import torch
+from sklearn.base import BaseEstimator, RegressorMixin
 
 def evaluate_model_advanced(model, X, y, y_scaler):  # nn configuration
     """
@@ -92,57 +96,116 @@ def evaluate_model(model, X, y):
     return {"MAE": mae, "RMSE": rmse, "R²": r2}
 
 
-def evaluate_timeseries(model, val_series, val_covariates, horizon, target_scaler=None):
-    """
-    Evaluates a time series model on validation data.
-    Made to evaluate different time series models.
+# def evaluate_timeseries(model, val_series, val_covariates, horizon, target_scaler=None):
+#     """
+#     Evaluates a time series model on validation data.
+#     Made to evaluate different time series models.
 
-    Args:
-        model: Trained time-series model (e.g., N-BEATS).
-        val_series (list): List of TimeSeries objects (actual values).
-        val_covariates (list): List of TimeSeries objects (features).
-        horizon (int): Number of steps to forecast.
-        target_scaler (Scaler): Optional scaler to inverse transform predictions.
-    """
-    all_y_true = []  # List for actual data
-    all_y_pred = []  # List for predicted data
+#     Args:
+#         model: Trained time-series model (e.g., N-BEATS).
+#         val_series (list): List of TimeSeries objects (actual values).
+#         val_covariates (list): List of TimeSeries objects (features).
+#         horizon (int): Number of steps to forecast.
+#         target_scaler (Scaler): Optional scaler to inverse transform predictions.
+#     """
+#     all_y_true = []  # List for actual data
+#     all_y_pred = []  # List for predicted data
 
-    for series, covariates in zip(val_series, val_covariates):
-        # Forecast `horizon` steps ahead
-        pred = model.predict(
-            n=horizon,
-            series=series[:-horizon],  # Training portion
-            # Features up to forecast start
-            past_covariates=covariates[:-horizon]
+#     for series, covariates in zip(val_series, val_covariates):
+#         # Forecast `horizon` steps ahead
+#         pred = model.predict(
+#             n=horizon,
+#             series=series[:-horizon],  # Training portion
+#             # Features up to forecast start
+#             past_covariates=covariates[:-horizon]
+#         )
+
+#         # Inverse scaling (if used)
+#         if target_scaler:
+#             pred = target_scaler.inverse_transform(pred)
+#             series = target_scaler.inverse_transform(series)
+
+#         # Extract values
+#         y_true = series[-horizon:].univariate_values()  # Last `horizon` steps
+#         y_pred = pred.univariate_values()
+
+#         all_y_true.extend(y_true)
+#         all_y_pred.extend(y_pred)
+
+#     # Calculate metrics
+#     metrics = {
+#         "MAE": mean_absolute_error(all_y_true, all_y_pred),
+#         "MSE": mean_squared_error(all_y_true, all_y_pred),
+#         "RMSE": np.sqrt(mean_squared_error(all_y_true, all_y_pred)),
+#         "R²": r2_score(all_y_true, all_y_pred)
+#     }
+
+#     print(f"MAE: {metrics['MAE']:.4f}")
+#     print(f"MSE: {metrics['MSE']:.4f}")
+#     print(f"RMSE: {metrics['RMSE']:.4f}")
+#     print(f"R²: {metrics['R²']:.4f}")
+
+#     return metrics
+
+class TabNetRegressorWrapper(BaseEstimator, RegressorMixin):
+    def __init__(
+        self,
+        n_d=16,
+        n_a=16,
+        n_steps=3,
+        gamma=1.3,
+        lambda_sparse=1e-3,
+        optimizer_params=None,
+        mask_type="sparsemax",
+        device_name="auto",
+        # these next ones will be sent to `.fit()`
+        max_epochs=50,
+        patience=10,
+        batch_size=1024,
+        virtual_batch_size=128,
+        drop_last=False,
+    ):
+        self.n_d = n_d
+        self.n_a = n_a
+        self.n_steps = n_steps
+        self.gamma = gamma
+        self.lambda_sparse = lambda_sparse
+        self.optimizer_params = optimizer_params or {"lr": 0.03, "weight_decay": 1e-5}
+        self.mask_type = mask_type
+        self.device_name = device_name
+        self.max_epochs = max_epochs
+        self.patience = patience
+        self.batch_size = batch_size
+        self.virtual_batch_size = virtual_batch_size
+        self.drop_last = drop_last
+        self._model = None
+
+    def fit(self, X, y):
+        # instantiate the PyTorch‑TabNet model
+        self._model = TabNetRegressor(
+            n_d=self.n_d,
+            n_a=self.n_a,
+            n_steps=self.n_steps,
+            gamma=self.gamma,
+            lambda_sparse=self.lambda_sparse,
+            optimizer_fn=torch.optim.Adam,
+            optimizer_params=self.optimizer_params,
+            mask_type=self.mask_type,
+            device_name=self.device_name,
         )
+        # call its `.fit()`
+        self._model.fit(
+            X, y,
+            max_epochs=self.max_epochs,
+            patience=self.patience,
+            batch_size=self.batch_size,
+            virtual_batch_size=self.virtual_batch_size,
+            drop_last=self.drop_last,
+        )
+        return self
 
-        # Inverse scaling (if used)
-        if target_scaler:
-            pred = target_scaler.inverse_transform(pred)
-            series = target_scaler.inverse_transform(series)
-
-        # Extract values
-        y_true = series[-horizon:].univariate_values()  # Last `horizon` steps
-        y_pred = pred.univariate_values()
-
-        all_y_true.extend(y_true)
-        all_y_pred.extend(y_pred)
-
-    # Calculate metrics
-    metrics = {
-        "MAE": mean_absolute_error(all_y_true, all_y_pred),
-        "MSE": mean_squared_error(all_y_true, all_y_pred),
-        "RMSE": np.sqrt(mean_squared_error(all_y_true, all_y_pred)),
-        "R²": r2_score(all_y_true, all_y_pred)
-    }
-
-    print(f"MAE: {metrics['MAE']:.4f}")
-    print(f"MSE: {metrics['MSE']:.4f}")
-    print(f"RMSE: {metrics['RMSE']:.4f}")
-    print(f"R²: {metrics['R²']:.4f}")
-
-    return metrics
-
+    def predict(self, X):
+        return self._model.predict(X)
 
 def param_grids(model_type):
     if model_type == RandomForestRegressor.__name__:  # Random Forest Regressor
@@ -224,47 +287,23 @@ def param_grids(model_type):
             'grow_policy': ['SymmetricTree', 'Depthwise'],
             'random_state': [42]
         }
-    elif model_type == NBEATSModel.__name__:  # N-BEAT Model (Time-Series)
-        # Define parameter grid for NBEATSModel
-        input_chunk_length_values = [6]
-        output_chunk_length_values = [1]
-        num_stacks_values = [5, 10]
-        num_blocks_values = [1, 3]
-        num_layers_values = [2, 4]
-        layer_widths_values = [128, 256]
-        dropout_values = [0.0, 0.1]
-        optimizer_kwargs_values = [{'lr': 1e-3}, {'lr': 1e-4}]
-        batch_size_values = [32, 64]
-        n_epochs_values = [50, 100]
-        random_state_values = [42]
-
-        # Create a list of dictionaries with all combinations of parameters
-        param_combinations = product(
-            input_chunk_length_values, output_chunk_length_values, num_stacks_values,
-            num_blocks_values, num_layers_values, layer_widths_values, dropout_values,
-            optimizer_kwargs_values, batch_size_values, n_epochs_values, random_state_values
-        )
-
-        # Convert each combination into a dictionary
-        param_grid = [
-            {
-                'input_chunk_length': input_chunk_length,
-                'output_chunk_length': output_chunk_length,
-                'num_stacks': num_stacks,
-                'num_blocks': num_blocks,
-                'num_layers': num_layers,
-                'layer_widths': layer_widths,
-                'dropout': dropout,
-                'optimizer_kwargs': optimizer_kwargs,
-                'batch_size': batch_size,
-                'n_epochs': n_epochs,
-                'random_state': random_state
-            }
-            for input_chunk_length, output_chunk_length, num_stacks, num_blocks, num_layers,
-            layer_widths, dropout, optimizer_kwargs, batch_size, n_epochs, random_state in param_combinations
-        ]
-
-        return param_grid
+    elif model_type == TabNetRegressorWrapper.__name__:
+        return {
+            # constructor args
+            "n_d":               [8, 16],
+            "n_a":               [8, 16],
+            "n_steps":           [3, 5],
+            "gamma":             [1.3], # default is fine
+            "lambda_sparse":     [1e-3], # default
+            "optimizer_params":  [{"lr": 0.03, "weight_decay":1e-5}],
+            "mask_type":         ["sparsemax"],
+            # fit() args
+            "max_epochs":        [20, 50],
+            "patience":          [5, 10],
+            "batch_size":        [1024, 2048],
+            "virtual_batch_size":[128, 256],
+            "drop_last":         [False],
+        }
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
 
@@ -273,57 +312,28 @@ def find_best_hyperparameters(model_class, parameter_grid, X_train, y_train):
     model_type = model_class.__name__
 
     # Modified due to Time series models, e.g N-BEATS, couldn't use Gridsearch
-    if model_type in ["RandomForestRegressor", "DecisionTreeRegressor", "LinearRegression", "MLPRegressor", "XGBRegressor", "CatBoostRegressor"]:
+    if model_type in [
+        "RandomForestRegressor", 
+        "DecisionTreeRegressor", 
+        "LinearRegression", 
+        "MLPRegressor", 
+        "XGBRegressor", 
+        "CatBoostRegressor",
+        "TabNetRegressorWrapper" # TabNet model made for GridSearch
+        ]:
         # For Scikit-learn models, use GridSearchCV
         print(f"Performing GridSearchCV for {model_type}...")
         grid_search = GridSearchCV(
             estimator=model_class(),
             param_grid=parameter_grid,
             cv=5,
-            n_jobs=-1,  # Uses all CPU cores
-            verbose=2,
+            n_jobs=-1, # Uses all CPU cores
+            # verbose=2, # TabNet doesnt use so it will be ignored
             scoring='neg_mean_squared_error'
         )
         grid_search.fit(X_train, y_train)
         best_params = grid_search.best_params_
         print(f'{model_type} Best Parameters: {best_params}')
-
-    elif model_type == "NBEATSModel":  # Further edit if other models are Time Series
-        # For NBEATSModel (Darts), do manual hyperparameter search
-        best_params = None
-        best_score = float('inf')
-
-        for params in parameter_grid:
-            try:
-                # Extract the input_chunk_length and output_chunk_length manually
-                input_chunk_length = params['input_chunk_length']
-                output_chunk_length = params['output_chunk_length']
-
-                # Create the model with the current set of parameters
-                model = model_class(
-                    input_chunk_length=input_chunk_length,
-                    output_chunk_length=output_chunk_length,
-                    **{key: value for key, value in params.items() if key not in ['input_chunk_length', 'output_chunk_length']}
-                )
-
-                # Train the model
-                model.fit(X_train, verbose=True)
-
-                # Forecast and evaluate
-                forecast = model.predict(len(y_train), series=X_train)
-                score = mean_squared_error(y_train.values(), forecast.values())
-
-                if score < best_score:
-                    best_score = score
-                    best_params = params
-
-            except Exception as e:
-                print(f"Error with params {params}: {e}")
-                continue
-
-        print(
-            f"Best parameters for {model_type}: {best_params} with MSE: {best_score}")
-
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
 
