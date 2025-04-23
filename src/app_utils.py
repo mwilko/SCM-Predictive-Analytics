@@ -25,6 +25,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, r
 from sklearn.model_selection import train_test_split
 # Application
 import streamlit as st
+# Import model TabNet
+from pytorch_tabnet.tab_model import TabNetRegressor
 
 
 def compute_group_zscore(group):  # Function to compute z-scores for each group
@@ -207,6 +209,20 @@ class Tuning:
         random_state=42
     )
 
+    tabnet_tuned = TabNetRegressor(  # Tuned model hyperparams from tabnet ipynb
+        batch_size=1024,
+        drop_last=False, 
+        gamma=1.3,
+        lambda_sparse=0.001,
+        mask_type='sparsemax',
+        max_epochs=50,
+        n_a=16, 
+        n_steps=5,
+        optimizer_params={'lr'=0.03, 'weight_decay'=1e-5},
+        patience=5,
+        virtual_batch_size=128
+    )
+    
     # Stacking ensemble with RF MLP and MLP
 
     # Change 'alpha' value for different weighting
@@ -217,7 +233,9 @@ class Tuning:
         estimators=[
             ('rf_tuned', rf_tuned),
             ('mlp_tuned', mlp_tuned),
-            ('xgb_tuned', xbg_tuned)
+            ('xgb_tuned', xbg_tuned),
+            ('catb_tuned', catb_tuned),
+            ('tabnet_tuned', tabnet_tuned)
         ],
         final_estimator=meta_model
     )

@@ -328,7 +328,7 @@ def find_best_hyperparameters(model_class, parameter_grid, X_train, y_train):
             param_grid=parameter_grid,
             cv=5,
             n_jobs=-1, # Uses all CPU cores
-            # verbose=2, # TabNet doesnt use so it will be ignored
+            verbose=2,
             scoring='neg_mean_squared_error'
         )
         grid_search.fit(X_train, y_train)
