@@ -298,19 +298,19 @@ def param_grids(model_type):
     elif model_type == TabNetRegressorWrapper.__name__:
         return {
             # constructor args
-            "n_d":               [8, 16],
-            "n_a":               [8, 16],
-            "n_steps":           [3, 5],
-            "gamma":             [1.3], # default is fine
-            "lambda_sparse":     [1e-3], # default
-            "optimizer_params":  [{"lr": 0.03, "weight_decay":1e-5}],
-            "mask_type":         ["sparsemax"],
+            "n_d": [8, 16],
+            "n_a": [8, 16],
+            "n_steps": [3, 5],
+            "gamma": [1.3], # default
+            "lambda_sparse": [1e-3], # default
+            "optimizer_params": [{"lr": 0.03, "weight_decay":1e-5}],
+            "mask_type": ["sparsemax"],
             # fit() args
-            "max_epochs":        [20, 50],
-            "patience":          [5, 10],
-            "batch_size":        [1024, 2048],
-            "virtual_batch_size":[128, 256],
-            "drop_last":         [False],
+            "max_epochs": [20, 50],
+            "patience": [5, 10],
+            "batch_size": [1024, 2048],
+            "virtual_batch_size": [128, 256],
+            "drop_last": [False],
         }
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
