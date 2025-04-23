@@ -218,7 +218,7 @@ class Tuning:
         max_epochs=50,
         n_a=16, 
         n_steps=5,
-        optimizer_params={'lr'=0.03, 'weight_decay'=1e-5},
+        optimizer_params={'lr': 0.03, 'weight_decay': 1e-5},
         patience=5,
         virtual_batch_size=128
     )
