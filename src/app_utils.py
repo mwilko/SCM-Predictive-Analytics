@@ -210,17 +210,17 @@ class Tuning:
     )
 
     tabnet_tuned = TabNetRegressor(  # Tuned model hyperparams from tabnet ipynb
-        batch_size=1024,
-        drop_last=False, 
+        # batch_size=1024,
+        # drop_last=False, 
         gamma=1.3,
         lambda_sparse=0.001,
         mask_type='sparsemax',
-        max_epochs=50,
+        # max_epochs=50,
         n_a=16, 
         n_steps=5,
         optimizer_params={'lr': 0.03, 'weight_decay': 1e-5},
-        patience=5,
-        virtual_batch_size=128
+        # patience=5,
+        # virtual_batch_size=128
     )
     
     # Stacking ensemble with RF MLP and MLP

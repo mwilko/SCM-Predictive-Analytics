@@ -75,7 +75,7 @@ with st.expander('Demand Forecasting'):
             'Multi-Layer Perceptron (MLP/Neural Network)',
             'XGBoost',
             'CatBoost',
-            'SARIMAX'
+            'TabNet'
         ]
 
         chosen_model = st.selectbox('Select learning model', model_choices)
@@ -139,7 +139,7 @@ with st.expander('Demand Forecasting'):
                     'Multi-Layer Perceptron (MLP/Neural Network)': tune.mlp_tuned,
                     'XGBoost': tune.xbg_tuned,
                     'CatBoost': tune.catb_tuned,
-                    # 'SARIMAX': tune.sarimax_tuned,
+                    'TabNet': tune.tabnet_tuned,
                 }
 
                 # Run all the models and display the model with the best performance for the customer
