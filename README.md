@@ -1,10 +1,8 @@
 # Predictive analytics for Supply Chain Managment
-![Catapult Print's banner. (Company which project data structure is provided by)](/design/cat_banner.jpg)
-
 ## Introduction
 High interests in machine learning (ML) and data visualisation resulted in this research and application of predictive analysis in the supply chain management (SCM).
 
-Catapult Print, a start-up company growing to 60 million dollars turnover in five years, has kindly pre-processed operational datasets and a synthetic dataset was made by me for usage in this project. This project for me to perform data science techniques and provide insights and provide a deliverable which shows how a despoke ML and data visualisation application can help with decison-making in SCM.
+A synthetic dataset was made by me for usage in this project based on a real-world data structure. This project for me to perform data science techniques and provide insights and provide a deliverable which shows how a despoke ML and data visualisation application can help with decison-making in SCM.
 
 The final aim of this project is to gain crucial data science knowledge while also learning to working with raw real-world company datasets through synthetic datasets to provide real-time business intelligence.
 
