@@ -140,7 +140,7 @@ with st.expander('Demand Forecasting'):
             'Multi-Layer Perceptron (MLP/Neural Network)',
             'XGBoost',
             'CatBoost',
-            'Ensemble (RF & MLP)'
+            'Stacking Ensemble (All-in-one)'
         ]
 
         chosen_model = st.selectbox('Select learning model', model_choices)
