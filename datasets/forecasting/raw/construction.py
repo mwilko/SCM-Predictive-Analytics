@@ -9,7 +9,7 @@ import torch
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 data_dir = os.path.join(base_dir, "raw")
 
-# Load real dataset
+# Load data structure dataset
 df = pd.read_csv(os.path.join(data_dir, 'dataset_structure.csv'), sep=',', header=0)
 print("Original Data Shape:", df.shape)
 
