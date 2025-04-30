@@ -43,8 +43,15 @@ with st.expander('Data'):
     y = product_sales.OrderQuantity
     st.write(y)
 
+    # Extract prefix and filter customer code, everything before the first '-'
+    product_sales['ProductGroup'] = product_sales['ProductNumber'].str.split(
+        '-').str[0]
+
 with st.expander('Data Visualisations'):
     
+    # Create copy of product sales for visualisation purposes
+    visual_prod_sales = product_sales.copy()
+
     # Show the distribution of popular customer order quantities
     st.write('**Customer Order Quantity**')
     st.write(
@@ -53,10 +60,7 @@ with st.expander('Data Visualisations'):
     # Customers rows which will be plotted
     selected_prefixes = ['ALB', 'FRE', 'MOM', 'UND']
 
-    # Extract prefix and filter customer code, everything before the first '-'
-    product_sales['ProductGroup'] = product_sales['ProductNumber'].str.split(
-        '-').str[0]
-    filtered_data = product_sales[product_sales['ProductGroup'].isin(
+    filtered_data = visual_prod_sales[visual_prod_sales['ProductGroup'].isin(
         selected_prefixes)]
 
     # Define and filter the date range
@@ -70,9 +74,9 @@ with st.expander('Data Visualisations'):
     
     # Monthly aggregate trend + moving average
     st.write('**Monthly Sales Trend & 3-Month Moving Average**')
-    product_sales['OrderDate'] = pd.to_datetime(product_sales['OrderDate'])
+    visual_prod_sales['OrderDate'] = pd.to_datetime(visual_prod_sales['OrderDate'])
     monthly = (
-        product_sales
+        visual_prod_sales
         .set_index('OrderDate')
         .resample('M')['OrderQuantity']
         .sum()
@@ -83,12 +87,13 @@ with st.expander('Data Visualisations'):
     
     # Weekday vs. month heatmap to expose seasonality
     st.write('**Avg Order Quantity: Weekday × Month**')
-    pivot = product_sales.pivot_table(
+    pivot = visual_prod_sales.pivot_table(
         index='order_weekday',
         columns='order_month',
         values='OrderQuantity',
         aggfunc='mean'
     )
+
     fig, ax = plt.subplots(figsize=(6,3))
     cax = ax.matshow(pivot, aspect='auto', cmap='Oranges')
     # for (i, j), val in np.ndenumerate(pivot.values): # Uncomment to show values in each cell
@@ -108,7 +113,7 @@ with st.expander('Data Visualisations'):
         'yoy_growth', 'moving_avg_3m', 'moving_avg_6m', 'moving_avg_12m', 'moving_avg_18m',
         'sales_2022', 'sales_2023', 'sales_2024'
     ]
-    corr_matrix = product_sales[numerical_features].corr()
+    corr_matrix = visual_prod_sales[numerical_features].corr()
 
     # disable background gridlines
     sns.set_style("white", {"axes.grid": False})
