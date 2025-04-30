@@ -4,6 +4,9 @@ import pandas as pd
 import sys
 import os
 from sklearn.model_selection import TimeSeriesSplit
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
 
 # Ensure app_utils can be imported
 current_dir = os.path.dirname(__file__)
@@ -12,7 +15,7 @@ if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
 # fmt: off
-from app_utils import Evaluation as evalu, Transform as trans, Tuning as tune, Plots as plt
+from app_utils import Evaluation as evalu, Transform as trans, Tuning as tune, Plots as plots
 # fmt: on
 
 # Define dir for the dataset to be extracted
@@ -41,6 +44,8 @@ with st.expander('Data'):
     st.write(y)
 
 with st.expander('Data Visualisations'):
+    
+    # Show the distribution of popular customer order quantities
     st.write('**Customer Order Quantity**')
     st.write(
         'Customer order quantity distribution. Customers shown are ABL, FRE, MOM and UND.')
@@ -62,6 +67,66 @@ with st.expander('Data Visualisations'):
 
     st.scatter_chart(data=filtered_data, x='OrderDate',
                      y='OrderQuantity', color='ProductGroup')
+    
+    # Monthly aggregate trend + moving average
+    st.write('**Monthly Sales Trend & 3-Month Moving Average**')
+    product_sales['OrderDate'] = pd.to_datetime(product_sales['OrderDate'])
+    monthly = (
+        product_sales
+        .set_index('OrderDate')
+        .resample('M')['OrderQuantity']
+        .sum()
+        .to_frame()
+    )
+    monthly['MovingAverage3m'] = monthly['OrderQuantity'].rolling(3).mean()
+    st.line_chart(monthly)
+    
+    # Weekday vs. month heatmap to expose seasonality
+    st.write('**Avg Order Quantity: Weekday × Month**')
+    pivot = product_sales.pivot_table(
+        index='order_weekday',
+        columns='order_month',
+        values='OrderQuantity',
+        aggfunc='mean'
+    )
+    fig, ax = plt.subplots(figsize=(6,3))
+    cax = ax.matshow(pivot, aspect='auto', cmap='Oranges')
+    # for (i, j), val in np.ndenumerate(pivot.values): # Uncomment to show values in each cell
+    #     ax.text(j, i, f"{val:.0f}", ha='center', va='center', fontsize=8)
+    ax.set_xticks(range(12)); ax.set_xticklabels(range(1,13))
+    ax.set_yticks(range(7)); ax.set_yticklabels(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'])
+    ax.set_xlabel('Month'); ax.set_ylabel('Weekday')
+    fig.colorbar(cax, label='Avg Qty')
+    st.pyplot(fig)
+
+    # Feature - Target Correlations
+    st.write('**Feature Correlation to Order Quantity**')
+    numerical_features = [
+        'OrderQuantity', 'prev_month_sales', 'prev_week_sales', 'prev_2_month_sales',
+        'prev_3_month_sales', 'var_3m', 'var_6m', 'var_12m', 'var_18m',
+        'log_var_3m', 'log_var_6m', 'log_var_12m', 'log_var_18m',
+        'yoy_growth', 'moving_avg_3m', 'moving_avg_6m', 'moving_avg_12m', 'moving_avg_18m',
+        'sales_2022', 'sales_2023', 'sales_2024'
+    ]
+    corr_matrix = product_sales[numerical_features].corr()
+
+    # disable background gridlines
+    sns.set_style("white", {"axes.grid": False})
+
+    fig2, ax2 = plt.subplots(figsize=(12, 8))
+    sns.heatmap(
+        corr_matrix[['OrderQuantity']] * 100, # Convert to percentage
+        cmap='Oranges',
+        annot=True,
+        fmt=".2f",
+        linewidths=0, # No lines between cells
+        cbar_kws={'label': 'Correlation (%)'},
+        ax=ax2
+    )
+    ax2.set_ylabel("")  
+    ax2.set_yticklabels(ax2.get_yticklabels(), rotation=0)
+    sns.despine(ax=ax2, left=True, bottom=True) # Remove gridlines and ticks
+    st.pyplot(fig2)
 
 with st.expander('Demand Forecasting'):
     # Create tabs for model selection, data view, and results
