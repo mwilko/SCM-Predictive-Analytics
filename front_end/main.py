@@ -75,7 +75,7 @@ with st.expander('Demand Forecasting'):
             'Multi-Layer Perceptron (MLP/Neural Network)',
             'XGBoost',
             'CatBoost',
-            'TabNet'
+            'Ensemble (RF & MLP)'
         ]
 
         chosen_model = st.selectbox('Select learning model', model_choices)
@@ -139,7 +139,7 @@ with st.expander('Demand Forecasting'):
                     'Multi-Layer Perceptron (MLP/Neural Network)': tune.mlp_tuned,
                     'XGBoost': tune.xbg_tuned,
                     'CatBoost': tune.catb_tuned,
-                    'TabNet': tune.tabnet_tuned,
+                    'Stacked Ensemble (All-in-one)': tune.stacked_ensemble_tuned,
                 }
 
                 # Run all the models and display the model with the best performance for the customer
@@ -147,6 +147,8 @@ with st.expander('Demand Forecasting'):
                     model_results = {}  # Initialize dictionary to hold results from all models
 
                     for name, model in models.items():
+                        if name == 'Stacked Ensemble (All-in-one)':
+                            st.info('This model could take about 10-15 minutes to run...')
                         with st.spinner(f'Running {name}...'):
                             try:
                                 model_results[name] = evalu.run_model(
