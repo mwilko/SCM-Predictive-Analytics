@@ -337,9 +337,7 @@ def find_best_hyperparameters(model_class, parameter_grid, X_train, y_train):
             cv=5,
             n_jobs=-1, # Uses all CPU cores
             verbose=2,
-            
-            
-                        scoring='neg_mean_squared_error'
+            scoring='neg_mean_squared_error'
         )
         grid_search.fit(X_train, y_train)
         best_params = grid_search.best_params_
