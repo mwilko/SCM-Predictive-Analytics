@@ -1,4 +1,3 @@
-# Predictive analytics for Supply Chain Managment
 ![Front End UI](/frontend-ui.png)
 
 ## Introduction / Demo
