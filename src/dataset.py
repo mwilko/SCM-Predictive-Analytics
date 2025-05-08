@@ -120,6 +120,7 @@ product_sales['moving_avg_12m'] = product_sales.groupby('ProductNumber')[
 product_sales['moving_avg_18m'] = product_sales.groupby('ProductNumber')[
     'OrderQuantity'].transform(lambda x: x.rolling(window=18, min_periods=1).mean())
 
+# variance features
 product_sales['var_1m'] = product_sales.groupby('ProductNumber')[
     'OrderQuantity'].transform(lambda x: x.rolling(window=1, min_periods=1).var())
 product_sales['var_3m'] = product_sales.groupby('ProductNumber')[

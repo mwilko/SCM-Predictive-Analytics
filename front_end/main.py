@@ -251,7 +251,7 @@ with st.expander('Demand Forecasting'):
                         if 'RMSE' in comparison_df.columns:
                             best_model = comparison_df['RMSE'].idxmin()
                             st.success(
-                                f"Best performing model: {best_model} (Lowest RMSE)")
+                                f"Best Performance: {best_model}\n(Lowest average error in order quantity - RMSE)")
 
                 else:  # Run the single model the user selected
                     if chosen_model in models:  # Check if model exists in the dictionary

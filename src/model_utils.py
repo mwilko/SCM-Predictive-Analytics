@@ -225,31 +225,6 @@ def param_grids(model_type):
             'min_samples_leaf': [1, 2, 4],
             'random_state': [42]
         }
-    elif model_type == DecisionTreeRegressor.__name__:  # Decision Tree Regressor
-        return {
-            'max_depth': [5, 10, 20, None],
-            'min_samples_split': [2, 5, 10],
-            'criterion': ['squared_error'],
-            'min_samples_leaf': [1, 2, 4]
-        }
-    elif model_type == LinearRegression.__name__:  # Linear Regression
-        return {
-            'fit_intercept': [True, False],
-            'n_jobs': [100, 200, 300],
-            'copy_X': [True, False],
-            'positive': [True, False]
-        }
-    # used keras regressor for NN model (old implementation)
-    elif model_type == KerasRegressor.__name__:  # NN Model (best params found)
-        return {
-            'batch_size': [64],
-            'epochs': [200],
-            'optimizer': ['adam'],
-            'loss': ['mean_squared_error'],
-            'verbose': [1],
-            'random_state': [42],
-            'shuffle': [True]
-        }
     elif model_type == MLPRegressor.__name__:  # MLPRegressor (Neural Network)
         return {
             # Number of neurons per layer
@@ -295,39 +270,31 @@ def param_grids(model_type):
             'grow_policy': ['SymmetricTree', 'Depthwise'],
             'random_state': [42]
         }
-    elif model_type == TabNetRegressorWrapper.__name__:
+    elif model_type == DecisionTreeRegressor.__name__:  # Decision Tree Regressor
         return {
-            # constructor args
-            "n_d": [8, 16],
-            "n_a": [8, 16],
-            "n_steps": [3, 5],
-            "gamma": [1.3], # default
-            "lambda_sparse": [1e-3], # default
-            "optimizer_params": [{"lr": 0.03, "weight_decay":1e-5}],
-            "mask_type": ["sparsemax"],
-            # fit() args
-            "max_epochs": [20, 50],
-            "patience": [5, 10],
-            "batch_size": [1024, 2048],
-            "virtual_batch_size": [128, 256],
-            "drop_last": [False],
+            'max_depth': [5, 10, 20, None],
+            'min_samples_split': [2, 5, 10],
+            'criterion': ['squared_error'],
+            'min_samples_leaf': [1, 2, 4]
         }
-    else:
-        raise ValueError(f"Unsupported model type: {model_type}")
-
+    elif model_type == LinearRegression.__name__:  # Linear Regression
+        return {
+            'fit_intercept': [True, False],
+            'n_jobs': [100, 200, 300],
+            'copy_X': [True, False],
+            'positive': [True, False]
+        }
 
 def find_best_hyperparameters(model_class, parameter_grid, X_train, y_train):
     model_type = model_class.__name__
 
-    # Modified due to Time series models, e.g N-BEATS, couldn't use Gridsearch
     if model_type in [
+        "LinearRegression", # Poor performance (not included in the pipeline)
+        "DecisionTreeRegressor", # Poor performance (not included in the pipeline)
         "RandomForestRegressor", 
-        "DecisionTreeRegressor", 
-        "LinearRegression", 
         "MLPRegressor", 
         "XGBRegressor", 
         "CatBoostRegressor",
-        "TabNetRegressorWrapper" # TabNet model made for GridSearch
         ]:
         # For Scikit-learn models, use GridSearchCV
         print(f"Performing GridSearchCV for {model_type}...")
