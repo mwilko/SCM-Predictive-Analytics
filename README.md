@@ -11,7 +11,7 @@ The final aim of this project is to gain crucial data science knowledge while al
 To view the demonstration, please visit the demo folder and open the video inside of the directory.
 
 ## Demand Forecasting
-SCM is a volitile and highly fluctuating industry, Catapult needs to have an accurate forecasting to ensure they keep the competitive edge that they are trying to uphold.
+SCM is a volitile and highly fluctuating industry, and companies need to have an accurate forecasting to ensure they keep the competitive edge that they are trying to uphold.
 
 Utilising historical data from product orders through the synthetic dataset, ML can be incorporated to predict future customer order quantity requirements. 
 
