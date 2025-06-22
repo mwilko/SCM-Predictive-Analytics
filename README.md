@@ -1,5 +1,8 @@
 ![Front End UI](/frontend-ui.png)
 
+# NOTE BRANCH OF ORIGINAL REPO - SYNTHETIC DATASET RATHER THAN REAL-WORLD
+Please note this is a branch of the actual project. Synthetic data is being used here while the original repository is using operational company data.
+
 ## Introduction / Demo
 High interests in machine learning (ML) and data visualisation resulted in this research and application of predictive analysis in the supply chain management (SCM).
 
